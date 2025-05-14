@@ -1,0 +1,35 @@
+name: Send submodule AED updates to main repo
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with: 
+          repository: TBALSTM/STM32_AWS_CDK
+          token: ${{ secrets.GA_TOKEN }}
+          submodules: true
+
+      - name: Pull & update specific submodule (AED)
+        run: |
+          git submodule update --remote --recursive models/AED
+
+      - name: Commit and push changes to STM32_AWS_CDK repo
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions - update submodules"
+
+          cd models/AED
+          SUBMODULE_MSG=$(git log origin/main -1 --pretty=%B | tr '\n' ' ')
+          cd -> /dev/null
+          NEW_COMMIT_MSG="[AED Update]: $SUBMODULE_MSG"
+
+          git add models/AED
+          git commit -m "$NEW_COMMIT_MSG" || echo "No changes to commit"
+          git push origin main || echo "No changes to push"
