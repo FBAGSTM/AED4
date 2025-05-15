@@ -3,9 +3,9 @@ from sagemaker.workflow.parameters import (
     ParameterFloat
 )
 
-from typing import Any
+from typing import Union, Any
 
-def get_pipeline_parameters() -> dict[str, Any]:
+def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> dict[str, Any]:
     """
     Return a dict that contains specific parameters pipeline for AED usecase
     """
@@ -16,7 +16,7 @@ def get_pipeline_parameters() -> dict[str, Any]:
         "validation_parameters": [
             {
                 "parameter": {
-                    "object": ParameterFloat(name = "q_clip_level_acc_threshold", default_value = 0.5),
+                    "object": ParameterFloat(name = "q_clip_level_acc_threshold", default_value = default_threshold if default_threshold else 0.5),
                     "fail_step_msg": "Execution failed due to clip level acc <",
                     "json_path": "multiclass_classification_metrics.clip_acc.value"
                 },
@@ -27,7 +27,7 @@ def get_pipeline_parameters() -> dict[str, Any]:
             },
             {
                 "parameter": {
-                    "object": ParameterFloat(name = "q_patch_level_acc_threshold", default_value = 0.5),
+                    "object": ParameterFloat(name = "q_patch_level_acc_threshold", default_value = default_threshold if default_threshold else 0.5),
                     "fail_step_msg": "Execution failed due to patch level acc <",
                     "json_path": "multiclass_classification_metrics.patch_acc.value"
                 },
