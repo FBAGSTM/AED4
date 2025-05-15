@@ -9,6 +9,8 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> dic
     """
     Return a dict that contains specific parameters pipeline for AED usecase
     """
+    CLIP_PARAM_NAME = "q_clip_level_acc_threshold"
+    PATCH_PARAM_NAME = "q_patch_level_acc_threshold"
     config = {
         "use_case_folder": "audio_event_detection",
         "processing_step_name": "PreprocessFSD50K",
@@ -16,7 +18,7 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> dic
         "validation_parameters": [
             {
                 "parameter": {
-                    "object": ParameterFloat(name = "q_clip_level_acc_threshold", default_value = default_threshold if default_threshold else 0.5),
+                    "object": ParameterFloat(name = CLIP_PARAM_NAME, default_value = default_threshold if default_threshold else 0.5),
                     "fail_step_msg": "Execution failed due to clip level acc <",
                     "json_path": "multiclass_classification_metrics.clip_acc.value"
                 },
@@ -27,7 +29,7 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> dic
             },
             {
                 "parameter": {
-                    "object": ParameterFloat(name = "q_patch_level_acc_threshold", default_value = default_threshold if default_threshold else 0.5),
+                    "object": ParameterFloat(name = PATCH_PARAM_NAME, default_value = default_threshold if default_threshold else 0.5),
                     "fail_step_msg": "Execution failed due to patch level acc <",
                     "json_path": "multiclass_classification_metrics.patch_acc.value"
                 },
