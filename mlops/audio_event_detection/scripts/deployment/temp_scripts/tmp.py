@@ -11,8 +11,8 @@ import os
 import sys
 import shutil
 from path_resolver import resolve_and_add_module_path
-common_directory = 'mlops' / 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-resolve_and_add_module_path(path=common_directory, root_depth=7)
+common_directory = 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
+resolve_and_add_module_path(path=common_directory, root_depth=4)
 import stm_ai_driver as stmaic
 from hydra.core.hydra_config import HydraConfig
 

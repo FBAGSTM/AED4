@@ -26,8 +26,8 @@ sys.path.append(os.path.abspath('../utils'))
 sys.path.append(os.path.abspath('../utils/models'))
 
 # BUG: Code changed here
-common_directory = 'mlops' / 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-resolve_and_add_module_path(path=common_directory, root_depth=6)
+common_directory = 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
+resolve_and_add_module_path(path=common_directory, root_depth=3)
 
 from utils import get_config, mlflow_ini, setup_seed, train
 
