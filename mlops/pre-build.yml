@@ -1,4 +1,5 @@
 commands:
+  - echo "Checking if the dataset exists in S3 Bucket - ${ARTIFACT_BUCKET}""
   - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/FSD50K/FSD50K.ground_truth/dev.csv || NOT_EXIST=true
   - |
     if [ $NOT_EXIST ]; then
