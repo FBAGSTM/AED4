@@ -3,9 +3,9 @@ from sagemaker.workflow.parameters import (
     ParameterFloat
 )
 
-from typing import Union, Any
+from typing import Union, Dict, Any
 
-def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> dict[str, Any]:
+def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> Dict[str, Any]:
     """
     Return a dict that contains specific parameters pipeline for AED usecase
     """
