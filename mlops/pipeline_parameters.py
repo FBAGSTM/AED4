@@ -12,7 +12,7 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> Dic
     CLIP_PARAM_NAME = "q_clip_level_acc_threshold"
     PATCH_PARAM_NAME = "q_patch_level_acc_threshold"
     config = {
-        "use_case_modelzoo_folder": "AED/audio_event_detection",
+        "use_case_modelzoo_folder": "audio_event_detection",
         "processing_step_name": "PreprocessFSD50K",
         "modelzoo_version": "v1",
         "validation_parameters": [
