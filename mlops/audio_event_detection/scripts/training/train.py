@@ -16,7 +16,6 @@ logger.setLevel(logging.ERROR)
 import hydra
 from omegaconf import DictConfig
 from pathlib import Path
-from path_resolver import resolve_and_add_module_path
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath('/opt/ml/model'))
@@ -27,7 +26,10 @@ sys.path.append(os.path.abspath('../utils/models'))
 
 # BUG: Code changed here
 common_directory = 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-resolve_and_add_module_path(path=common_directory, root_depth=3)
+abs_common_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', common_directory))
+if abs_common_directory not in sys.path:
+    print(f"Module path: {abs_common_directory} added to sys path.")
+    sys.path.append(abs_common_directory)
 
 from utils import get_config, mlflow_ini, setup_seed, train
 

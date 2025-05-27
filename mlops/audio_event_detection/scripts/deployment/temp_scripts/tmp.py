@@ -10,9 +10,14 @@
 import os
 import sys
 import shutil
-from path_resolver import resolve_and_add_module_path
+
+# BUG: Code changed here
 common_directory = 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-resolve_and_add_module_path(path=common_directory, root_depth=4)
+abs_common_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', common_directory))
+if abs_common_directory not in sys.path:
+    print(f"Module path: {abs_common_directory} added to sys path.")
+    sys.path.append(abs_common_directory)
+
 import stm_ai_driver as stmaic
 from hydra.core.hydra_config import HydraConfig
 

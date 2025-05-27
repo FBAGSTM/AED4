@@ -30,7 +30,6 @@ from omegaconf import DictConfig, OmegaConf
 warnings.filterwarnings("ignore")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
-from path_resolver import resolve_and_add_module_path
 
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
@@ -40,8 +39,13 @@ sys.path.append(os.path.abspath('/opt/ml/processing/input'))
 
 sys.path.append(os.path.abspath('../utils'))
 sys.path.append(os.path.abspath('../utils/models'))
+
+# BUG: Code changed here
 common_directory = 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-resolve_and_add_module_path(path=common_directory, root_depth=3)
+abs_common_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', common_directory))
+if abs_common_directory not in sys.path:
+    print(f"Module path: {abs_common_directory} added to sys path.")
+    sys.path.append(abs_common_directory)
 
 from benchmark import evaluate_TFlite_quantized_model
 from common_benchmark import stm32ai_benchmark
