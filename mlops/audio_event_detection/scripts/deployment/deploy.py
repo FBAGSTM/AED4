@@ -28,11 +28,12 @@ sys.path.append(os.path.abspath('../utils'))
 sys.path.append(os.path.abspath('../utils/models'))
 
 # BUG: Code changed here
-common_directory = 'pipelines' / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-abs_common_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', common_directory))
-if abs_common_directory not in sys.path:
+from pathlib import Path
+common_directory = Path('pipelines') / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
+abs_common_directory = (Path(__file__).resolve().parents[2] / common_directory).resolve()
+if str(abs_common_directory) not in sys.path:
     print(f"Module path: {abs_common_directory} added to sys path.")
-    sys.path.append(abs_common_directory)
+    sys.path.append(str(abs_common_directory))
 
 from evaluate import evaluate_model
 from utils import get_config, mlflow_ini, setup_seed
