@@ -15,21 +15,21 @@ logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 import hydra
 from omegaconf import DictConfig
-from pathlib import Path
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.abspath('/opt/ml/model'))
-sys.path.append(os.path.abspath('/opt/ml/input/data/train'))
-
-sys.path.append(os.path.abspath('../utils'))
-sys.path.append(os.path.abspath('../utils/models'))
 
 # BUG: Code changed here
-common_directory = Path('pipelines') / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-abs_common_directory = (Path(__file__).resolve().parents[2] / common_directory).resolve()
-if str(abs_common_directory) not in sys.path:
-    print(f"Module path: {abs_common_directory} added to sys path.")
-    sys.path.append(str(abs_common_directory))
+from pathlib import Path
+# Define paths using pathlib
+base_dir = Path(__file__).resolve().parent
+os.chdir(base_dir)
+model_path = Path('/opt/ml/model')
+train_data_path = Path('/opt/ml/input/data/train')
+utils_path = base_dir / '..' / 'utils'
+models_path = utils_path / 'models'
+common_path = base_dir / '..' / '..' / '..' / 'common'
+# Add paths to sys.path if not already present
+for path in [model_path, train_data_path, utils_path.resolve(), models_path.resolve(), common_path.resolve()]:
+    if str(path) not in sys.path:
+        sys.path.append(str(path))
 
 from utils import get_config, mlflow_ini, setup_seed, train
 

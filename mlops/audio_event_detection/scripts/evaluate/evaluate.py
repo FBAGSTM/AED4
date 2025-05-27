@@ -34,19 +34,19 @@ import tensorflow as tf
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.abspath('/opt/ml/processing/input'))
-
-sys.path.append(os.path.abspath('../utils'))
-sys.path.append(os.path.abspath('../utils/models'))
-
 # BUG: Code changed here
 from pathlib import Path
-common_directory = Path('pipelines') / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-abs_common_directory = (Path(__file__).resolve().parents[2] / common_directory).resolve()
-if str(abs_common_directory) not in sys.path:
-    print(f"Module path: {abs_common_directory} added to sys path.")
-    sys.path.append(str(abs_common_directory))
+# Define paths using pathlib
+base_dir = Path(__file__).resolve().parent
+os.chdir(base_dir)
+processing_input__path = Path('/opt/ml/processing/input')
+utils_path = base_dir / '..' / 'utils'
+models_path = utils_path / 'models'
+common_path = base_dir / '..' / '..' / '..' / 'common'
+# Add paths to sys.path if not already present
+for path in [processing_input__path, utils_path.resolve(), models_path.resolve(), common_path.resolve()]:
+    if str(path) not in sys.path:
+        sys.path.append(str(path))
 
 from benchmark import evaluate_TFlite_quantized_model
 from common_benchmark import stm32ai_benchmark

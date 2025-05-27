@@ -23,17 +23,19 @@ import tensorflow as tf
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
-sys.path.append(os.path.abspath('../evaluate'))
-sys.path.append(os.path.abspath('../utils'))
-sys.path.append(os.path.abspath('../utils/models'))
-
 # BUG: Code changed here
 from pathlib import Path
-common_directory = Path('pipelines') / 'stm' / 'stm32ai-modelzoo-v1' / 'common'
-abs_common_directory = (Path(__file__).resolve().parents[2] / common_directory).resolve()
-if str(abs_common_directory) not in sys.path:
-    print(f"Module path: {abs_common_directory} added to sys path.")
-    sys.path.append(str(abs_common_directory))
+# Define paths using pathlib
+base_dir = Path(__file__).resolve().parent
+os.chdir(base_dir)
+eval_path = base_dir / '..' / 'evaluate'
+utils_path = base_dir / '..' / 'utils'
+models_path = utils_path / 'models'
+common_path = base_dir / '..' / '..' / '..' / 'common'
+# Add paths to sys.path if not already present
+for path in [eval_path.resolve(), utils_path.resolve(), models_path.resolve(), common_path.resolve()]:
+    if str(path) not in sys.path:
+        sys.path.append(str(path))
 
 from evaluate import evaluate_model
 from utils import get_config, mlflow_ini, setup_seed
