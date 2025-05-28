@@ -5,7 +5,7 @@ phases:
       - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/FSD50K/FSD50K.ground_truth/dev.csv || NOT_EXIST=true
       - |
         if [ $NOT_EXIST ]; then
-          - mkdir temp && cd temp
+          mkdir temp && cd temp
 
           echo "Downloading FSD50K Dataset..." ;
 
