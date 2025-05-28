@@ -1,10 +1,12 @@
 phases:
   pre_build:
     commands:
-      - echo "Checking if the dataset exists in S3 Bucket - ${ARTIFACT_BUCKET}""
+      - echo "Checking if the dataset exists in S3 Bucket - ${ARTIFACT_BUCKET}"
       - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/FSD50K/FSD50K.ground_truth/dev.csv || NOT_EXIST=true
       - |
         if [ $NOT_EXIST ]; then
+          - mkdir temp && cd temp
+
           echo "Downloading FSD50K Dataset..." ;
 
           echo "Downloading Dev Audio..." ;
@@ -25,11 +27,13 @@ phases:
           wget https://zenodo.org/records/4060432/files/FSD50K.ground_truth.zip -q;
 
           echo "Unziping..." ;
-          mkdir temp;
-          unzip -q FSD50K.ground_truth.zip -d temp/;
-          unzip -q FSD50K.eval_audio-unsplit.zip -d temp/;
-          unzip -q FSD50K.dev_audio-unsplit.zip -d temp/;
+          unzip -q FSD50K.ground_truth.zip -d;
+          unzip -q FSD50K.eval_audio-unsplit.zip -d;
+          unzip -q FSD50K.dev_audio-unsplit.zip -d;
+
+          cd ..
 
           echo "Uploading..." ;
           aws s3 cp temp s3://${ARTIFACT_BUCKET}/train/datasets/FSD50K/ --recursive --quiet;
         fi
+      - echo "Pre-build phase completed."
