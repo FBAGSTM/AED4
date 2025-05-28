@@ -34,19 +34,12 @@ import tensorflow as tf
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
-# BUG: Code changed here
-from pathlib import Path
-# Define paths using pathlib
-base_dir = Path(__file__).resolve().parent
-os.chdir(base_dir)
-processing_input__path = Path('/opt/ml/processing/input')
-utils_path = base_dir / '..' / 'utils'
-models_path = utils_path / 'models'
-common_path = base_dir / '..' / '..' / '..' / 'common'
-# Add paths to sys.path if not already present
-for path in [processing_input__path, utils_path.resolve(), models_path.resolve(), common_path.resolve()]:
-    if str(path) not in sys.path:
-        sys.path.append(str(path))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath('/opt/ml/processing/input'))
+
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('../utils/models'))
+sys.path.append(os.path.abspath('../../../common'))
 
 from benchmark import evaluate_TFlite_quantized_model
 from common_benchmark import stm32ai_benchmark

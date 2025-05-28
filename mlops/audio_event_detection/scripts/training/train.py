@@ -16,21 +16,13 @@ logger.setLevel(logging.ERROR)
 import hydra
 from omegaconf import DictConfig
 
-# BUG: Code changed here
-from pathlib import Path
-# Define paths using pathlib
-base_dir = Path(__file__).resolve().parent
-os.chdir(base_dir)
-model_path = Path('/opt/ml/model')
-train_data_path = Path('/opt/ml/input/data/train')
-utils_path = base_dir / '..' / 'utils'
-models_path = utils_path / 'models'
-common_path = base_dir / '..' / '..' / '..' / 'common'
-# Add paths to sys.path if not already present
-for path in [model_path, train_data_path, utils_path.resolve(), models_path.resolve(), common_path.resolve()]:
-    if str(path) not in sys.path:
-        sys.path.append(str(path))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath('/opt/ml/model'))
+sys.path.append(os.path.abspath('/opt/ml/input/data/train'))
 
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('../utils/models'))
+sys.path.append(os.path.abspath('../../../common'))
 from utils import get_config, mlflow_ini, setup_seed, train
 
 @hydra.main(version_base=None, config_path="", config_name="user_config")

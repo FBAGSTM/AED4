@@ -10,16 +10,8 @@
 import os
 import sys
 import shutil
-
-# BUG: Code changed here
-from pathlib import Path
-# Define paths using pathlib
-base_dir = Path(__file__).resolve().parent
-common_path = base_dir / '..' / '..' / '..' / '..' / 'common'
-# Add paths to sys.path if not already present
-if str(common_path) not in sys.path:
-    sys.path.append(str(common_path))
-
+print(os.path.abspath('../../../common'))
+sys.path.append(os.path.abspath('../../../common'))
 import stm_ai_driver as stmaic
 from hydra.core.hydra_config import HydraConfig
 

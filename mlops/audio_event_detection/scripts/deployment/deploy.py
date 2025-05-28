@@ -23,19 +23,10 @@ import tensorflow as tf
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
-# BUG: Code changed here
-from pathlib import Path
-# Define paths using pathlib
-base_dir = Path(__file__).resolve().parent
-os.chdir(base_dir)
-eval_path = base_dir / '..' / 'evaluate'
-utils_path = base_dir / '..' / 'utils'
-models_path = utils_path / 'models'
-common_path = base_dir / '..' / '..' / '..' / 'common'
-# Add paths to sys.path if not already present
-for path in [eval_path.resolve(), utils_path.resolve(), models_path.resolve(), common_path.resolve()]:
-    if str(path) not in sys.path:
-        sys.path.append(str(path))
+sys.path.append(os.path.abspath('../evaluate'))
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('../utils/models'))
+sys.path.append(os.path.abspath('../../../common'))
 
 from evaluate import evaluate_model
 from utils import get_config, mlflow_ini, setup_seed
