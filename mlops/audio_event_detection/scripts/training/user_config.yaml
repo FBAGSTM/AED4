@@ -16,16 +16,16 @@ dataset:
   name: esc10
   class_names:
     [
-      'dog',
-      'chainsaw',
-      'crackling_fire',
+      'train',
+      'airplane',
+      'car_horn',
       'helicopter',
-      'rain',
-      'crying_baby',
-      'clock_tick',
-      'sneezing',
-      'rooster',
-      'sea_waves',
+      'engine',
+      'siren',
+      'chainsaw',
+      'church_bells',
+      'fireworks',
+      'hand_saw',
     ]
   audio_path: /opt/ml/input/data/train/datasets/ESC-50/audio
   csv_path: /opt/ml/input/data/train/datasets/ESC-50/meta/esc50.csv
