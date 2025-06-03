@@ -7,6 +7,13 @@ from typing import Union, Dict, Any
 def get_pipeline_parameters(dataset_name: str = "FSD50k", default_threshold: Union[float, None] = None) -> Dict[str, Any]:
     """
     Return a dict that contains specific parameters pipeline for AED usecase
+
+    Args:
+        dataset_name (str): The name of the dataset to be used. Defaults to "FSD50k".
+        default_threshold (Union[float, None]): A threshold value that pipeline parameters need to be above. If None, a default value will be used.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the pipeline parameters tailored for the AED use case.
     """
     CLIP_PARAM_NAME = "q_clip_level_acc_threshold"
     PATCH_PARAM_NAME = "q_patch_level_acc_threshold"
