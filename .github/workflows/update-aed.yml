@@ -5,7 +5,7 @@ on:
     branches:
       - main
 
-      
+
 jobs:
   call-reusable-workflow:
     uses: TBALSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
