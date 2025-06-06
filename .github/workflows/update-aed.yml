@@ -5,17 +5,13 @@ on:
     branches:
       - main
 
-env:
-  REUSABLE_WORKFLOW: TBALSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
-  SUBMODULE: AED
-
 jobs:
   call-reusable-workflow:
     concurrency:
       group: reusable-workflow-${{ github.ref }}
       cancel-in-progress: true
-    uses: ${{ env.REUSABLE_WORKFLOW }}
+    uses: TBALSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
     with:
-      submodule_name: ${{ env.SUBMODULE }}
+      submodule_name: "AED"
     secrets:
       personal_access_token: ${{ secrets.GA_TOKEN }}
