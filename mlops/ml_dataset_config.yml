@@ -1,0 +1,17 @@
+phases:
+  pre_build:
+    commands:  
+      - echo "Retrieving ML Dataset configuration for use case $USECASE_NAME"
+
+      - DATASET_NAME="ESC-50"
+      - DOWNLOAD_COMMAND="git clone https://github.com/karolpiczak/ESC-50.git ./temp"
+
+      - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/$DATASET_NAME || NOT_EXIST=true
+      - |
+        if [ "$NOT_EXIST" = true ]; then
+          mkdir -p temp
+          echo "Downloading $DATASET_NAME Dataset..."
+          eval $DOWNLOAD_COMMAND
+          echo "Uploading to S3 bucket under /train/datasets/$DATASET_NAME/ ..."
+          aws s3 cp temp s3://${ARTIFACT_BUCKET}/train/datasets/$DATASET_NAME/ --recursive --quiet
+        fi
