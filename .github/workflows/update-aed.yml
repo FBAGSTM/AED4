@@ -11,3 +11,5 @@ jobs:
     uses: TBALSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
     with:
       submodule_name: "AED"
+    secrets:
+      personal_access_token: ${{ secrets.GA_TOKEN }}
