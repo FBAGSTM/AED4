@@ -1,70 +1,12 @@
-name: Send submodule AED updates to main repo
+name: Call Reusable Workflow
 
 on:
   push:
-    branches: 
+    branches:
       - main
-    paths-ignore:
-      - '**/*.md'
 
 jobs:
-  update:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    concurrency:
-      group: update-${{ github.ref }}
-      cancel-in-progress: true
-
-    steps:
-      - uses: actions/checkout@v4
-        with: 
-          repository: TBALSTM/STM32_AWS_CDK
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: true
-
-      - name: Configure Git to use GITHUB_TOKEN
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      - name: Pull & update specific submodule (AED)
-        run: |
-          git submodule update --init --remote models/AED
-
-      - name: Commit and push changes to STM32_AWS_CDK repo
-        run: |
-          SUBMODULE_COMMIT=$(git -C models/AED rev-parse HEAD)
-          SUBMODULE_MSG=$(git -C models/AED log -1 --pretty=%B | tr '\n' ' ')
-
-          NEW_COMMIT_MSG="Update AED Submodule
-          Updated to the latest version of the AED submodule.
-          Submodule commit: $SUBMODULE_COMMIT
-          Message: $SUBMODULE_MSG"
-
-          git add models/AED
-          git diff --cached --quiet || git commit -m "$NEW_COMMIT_MSG"
-
-      - name: Check if tag 'last-aed-update' exists
-        run: |
-          if git rev-parse "last-aed-update" >/dev/null 2>&1; then
-            echo "Updating existing tag 'last-aed-update'"
-            git tag -d last-aed-update
-          else
-            echo "Creating new tag 'last-aed-update'"
-          fi
-
-          git tag -a last-aed-update -m "AED Pipeline Update: Latest version of the AED submodule for AWS CodePipeline.
-          - Last Submodule commit: $(git -C models/AED rev-parse HEAD)
-          - Last Submodule message: $(git -C models/AED log -1 --pretty=%B | tr '\n' ' ')
-          - Branch: $(git rev-parse --abbrev-ref HEAD)
-          - Date: $(date +'%Y-%m-%d %H:%M:%S')
-          - Triggered by: AWS CodePipeline"
-
-      - name: Push commits and tags to remote
-        run: |
-          git push origin main
-          git push origin last-AED-update -f
+  call-reusable-workflow:
+    uses: TBALSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
+    with:
+      submodule_name: "AED"
