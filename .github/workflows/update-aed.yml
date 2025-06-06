@@ -40,7 +40,7 @@ jobs:
 
           git add models/AED
           git diff --cached --quiet || git commit -m "$NEW_COMMIT_MSG"
-      
+
       - name: Check if tag 'last-aed-update' exists
         run: |
           if git rev-parse "last-aed-update" >/dev/null 2>&1; then
