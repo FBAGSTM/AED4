@@ -15,3 +15,4 @@ phases:
           echo "Uploading to S3 bucket under /train/datasets/$DATASET_NAME/ ..."
           aws s3 cp temp s3://${ARTIFACT_BUCKET}/train/datasets/$DATASET_NAME/ --recursive --quiet
         fi
+      - echo "Pre-build phase completed."
