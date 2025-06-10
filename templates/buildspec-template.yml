@@ -1,0 +1,51 @@
+# Buildspec Template for Custom Pipelines
+# Replace placeholders (e.g., <PLACEHOLDER>) with your specific values.
+
+version: 0.2
+
+# Artifacts: Specify the files or directories to be saved after the build.
+artifacts:
+  files:
+    - /tmp/ml/**/*
+  name: ml
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      - echo "Installing dependencies..."
+      - pip install --upgrade .
+
+  pre_build:
+    commands:
+      - echo "Retrieving ML Dataset configuration for use case $USECASE_NAME"
+
+      - DATASET_NAME="<DATASET_NAME>"  # Example: "ESC-50"
+      - DOWNLOAD_COMMAND="<DOWNLOAD_COMMAND>"  # Example: "git clone <REPO_URL> ./temp"
+
+      - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/$DATASET_NAME || NOT_EXIST=true
+      - |
+        if [ "$NOT_EXIST" = true ]; then
+          mkdir -p temp
+          echo "Downloading $DATASET_NAME Dataset..."
+          eval $DOWNLOAD_COMMAND
+          echo "Uploading to S3 bucket under /train/datasets/$DATASET_NAME/ ..."
+          aws s3 cp temp s3://${ARTIFACT_BUCKET}/train/datasets/$DATASET_NAME/ --recursive --quiet
+        fi
+      - echo "Pre-build phase completed."
+
+  build:
+    commands:
+      - echo "=== Execution of SageMaker pipeline ==="
+      - export PYTHONUNBUFFERED=TRUE
+      - export SAGEMAKER_PROJECT_NAME_ID="${SAGEMAKER_PROJECT_NAME}-${SAGEMAKER_PROJECT_ID}"
+      - |
+        run-pipeline --module-name pipelines.stm.pipeline \
+          --role-arn $SAGEMAKER_PIPELINE_ROLE_ARN \
+          --tags "[{\"Key\":\"sagemaker:project-name\", \"Value\":\"${SAGEMAKER_PROJECT_NAME}\"}, {\"Key\":\"sagemaker:project-id\", \"Value\":\"${SAGEMAKER_PROJECT_ID}\"}]" \
+          --kwargs "{\"usecase_name\":\"${USECASE_NAME}\",\"region\":\"${AWS_REGION}\",\"role\":\"${SAGEMAKER_PIPELINE_ROLE_ARN}\",\"default_bucket\":\"${ARTIFACT_BUCKET}\",\"pipeline_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"model_package_group_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"base_job_prefix\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"sagemaker_project_name\":\"${SAGEMAKER_PROJECT_NAME}\"}"
+      - aws s3 cp s3://${ARTIFACT_BUCKET}/evaluation/build/ /tmp/ml --recursive
+      - echo "Create/Update of the SageMaker Pipeline and execution completed."
+
+# Add any additional configurations here
