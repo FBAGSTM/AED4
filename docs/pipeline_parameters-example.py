@@ -1,54 +1,17 @@
-from sagemaker.workflow.parameters import (
-    ParameterFloat
-)
-
+from sagemaker.workflow.parameters import ParameterFloat
 from typing import Union, Dict, Any
-import yaml
-import os 
-
-base_dir = os.path.dirname(os.path.abspath(__file__))
-
-def get_dataset_name(aed_folder_name: str) -> str:
-    """
-    Extract the dataset name from a YAML configuration file.
-
-    Args:
-        usecase_folder (str): The folder path relative to the script's base directory where the `user_config.yaml` file is located.
-
-    Returns:
-        str: The name of the dataset specified in the YAML file.
-    """
-    try:
-        training_user_config_file = os.path.join(base_dir, aed_folder_name, "scripts", "training", "user_config.yaml")
-        with open(training_user_config_file, "r", encoding="utf-8") as yaml_file:
-            config = yaml.safe_load(yaml_file)
-        return config.get("dataset", {}).get("name", "AED_Dataset")
-
-    except (FileNotFoundError, yaml.YAMLError, Exception) as e:
-        print(f"Error: {e}")
-        return "AED_Dataset"
-
 
 def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> Dict[str, Any]:
-    """
-    Return a dict that contains specific parameters pipeline for AED usecase
-
-    Args:
-        default_threshold (Union[float, None]): A threshold value that pipeline parameters need to be above. If None, a default value will be used.
-
-    Returns:
-        Dict[str, Any]: A dictionary containing the pipeline parameters tailored for the AED use case.
-    """
-    AED_FOLDER_NAME = "audio_event_detection"
+    AED_MZ_FOLDER_NAME = "audio_event_detection"
     CLIP_PARAM_NAME = "q_clip_level_acc_threshold"
     config = {
-        "use_case_modelzoo_folder": AED_FOLDER_NAME,
-        "processing_step_name": f"Preprocess_{get_dataset_name(AED_FOLDER_NAME)}",
+        "use_case_modelzoo_folder": AED_MZ_FOLDER_NAME,
+        "processing_step_name": f"Preprocess_AED_Dataset",
         "modelzoo_version": "v1",
         "validation_parameters": [
             {
                 "parameter": {
-                    "object": ParameterFloat(name = CLIP_PARAM_NAME, default_value = default_threshold if default_threshold else 0.7),
+                    "object": ParameterFloat(name = CLIP_PARAM_NAME, default_value = default_threshold if default_threshold else 0.5),
                     "fail_step_msg": "Execution failed due to clip level acc <",
                     "json_path": "multiclass_classification_metrics.clip_acc.value"
                 },
