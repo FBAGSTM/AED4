@@ -1,7 +1,7 @@
 # SageMaker Pipelines (AED Version)
 
 ## Introduction
-This repository provides a `buildspec.yml` file to help you configure and execute SageMaker pipelines for audio event detection pipeline. The guide is designed to be flexible and easy to use, with placeholders for customization. Additionally, this README includes a **Dataset Catalogue** for managing datasets like **ESC-50** and **FSD50K**, and instructions for integrating them into your pipeline.
+This repository provides a `buildspec.yml` and a `pipeline_parameters.py` file to help you customize and execute SageMaker pipelines for audio event detection pipeline. The guide is designed to be flexible and easy to use, with placeholders for customization. Additionally, this README includes a **Dataset Catalogue** for managing datasets like **ESC-50** and **FSD50K**, and instructions for integrating them into your pipeline.
 
 > [!IMPORTANT]
 **File Relocation**:\
@@ -166,7 +166,7 @@ This section provides a catalogue of datasets that can be used in the pipeline. 
     ```bash
     git clone https://github.com/karolpiczak/ESC-50.git ./temp
     ```
-    > A dataset for sound event classification, containing 2,000 labeled environmental audio recordings across 50 classes. [See More Infos](https://github.com/karolpiczak/ESC-50)
+    A dataset for sound event classification, containing 2,000 labeled environmental audio recordings across 50 classes. [See More Infos](https://github.com/karolpiczak/ESC-50)
 
 2. `FSD50K`
 
@@ -193,39 +193,40 @@ This section provides a catalogue of datasets that can be used in the pipeline. 
     unzip -q FSD50K.eval_audio-unsplit.zip -d temp/ && \
     unzip -q FSD50K.dev_audio-unsplit.zip -d temp/"
     ```
-    > The FSD50K dataset is a large-scale, open dataset for sound event detection and classification. It contains over 51,000 audio recordings sourced from Freesound, a collaborative sound database. The dataset is organized into two main subsets: development (Dev) and evaluation (Eval), and it covers a wide range of sound events across 200 classes based on the AudioSet ontology. [See More Infos](https://zenodo.org/records/4060432)
+    The FSD50K dataset is a large-scale, open dataset for sound event detection and classification. It contains over 51,000 audio recordings sourced from Freesound, a collaborative sound database. The dataset is organized into two main subsets: development (Dev) and evaluation (Eval), and it covers a wide range of sound events across 200 classes based on the AudioSet ontology. [See More Infos](https://zenodo.org/records/4060432)
 
 > [!TIP]
 You can find an example of a completed buildspec.yml file for the dataset ESC-50 in the [buildspec-example.yml file](./buildspec-example.yml).
 
 ## SageMaker Pipeline Parameters
+These parameters are configured in this [file](../mlops/pipeline_parameters.py).
 
 ### Parameters Overview
-1. `Dataset Name`
-    * Parameter: Extracted dynamically from the `user_config.yaml` file.
-    * Location: <usecase_folder>/scripts/training/user_config.yaml
-    * Key in YAML: dataset.name
-    * Default Value: "AED_Dataset" (if the file or key is missing).
+1. **Dataset Name**
+    * *Parameter*: Extracted dynamically from the `user_config.yaml` file.
+    * *Location*: <usecase_folder>/scripts/training/user_config.yaml
+    * *Key in YAML*: dataset.name
+    * *Default Value*: "AED_Dataset" (if the file or key is missing).
 
     You can update the name field in the user_config.yaml file to specify a different dataset.
 
-2. `Validation Metrics`
+2. **Validation Metrics**
 
     **Clip-Level Accuracy**
-    - Parameter Name: q_clip_level_acc_threshold
-    - Default Threshold: 0.5 (can be overridden via default_threshold)
-    - fail_step_msg: Execution failed due to clip level acc <
-    - json_path: multiclass_classification_metrics.clip_acc.value
-    - Name: clip:accuracy
-    - Regex: Clip-level accuracy on test set : ([0-9\\.]+)
+    - *Parameter Name*: q_clip_level_acc_threshold
+    - *Default Threshold*: 0.5 (can be overridden via default_threshold)
+    - *fail_step_msg*: Execution failed due to clip level acc <
+    - *json_path*: multiclass_classification_metrics.clip_acc.value
+    - *Name*: clip:accuracy
+    - *Regex*: Clip-level accuracy on test set : ([0-9\\.]+)
 
     **Patch-Level Accuracy**
-    * Parameter Name: q_patch_level_acc_threshold
-    * Default Threshold: 0.5 (can be overridden via default_threshold).
-    * fail_step_msg: Execution failed due to patch level acc <
-    * json_path: multiclass_classification_metrics.patch_acc.value
-    * Name: patch:accuracy
-    * Regex: Patch-level accuracy on test set : ([0-9\\.]+)
+    * *Parameter Name*: q_patch_level_acc_threshold
+    * *Default Threshold*: 0.5 (can be overridden via default_threshold).
+    * *fail_step_msg*: Execution failed due to patch level acc <
+    * *json_path*: multiclass_classification_metrics.patch_acc.value
+    * *Name*: patch:accuracy
+    * *Regex*: Patch-level accuracy on test set : ([0-9\\.]+)
 
     The pipeline uses validation metrics to evaluate the model's performance. These metrics are defined dynamically and include thresholds for success.
 
@@ -234,9 +235,9 @@ You can find an example of a completed buildspec.yml file for the dataset ESC-50
     - modify the fail message step since it's just a SageMaker log.
 
     > [!WARNING]
-    > You can remove these validation parameters entirely; however, doing so may result in an inaccurate pipeline and AI model passing the validation step.
+    You can remove these validation parameters entirely; however, doing so may result in an inaccurate pipeline and AI model passing the validation step.
 
-3. `Other Parameter`
+3. **Other Parameters**
     For other parameters or nested parameters, it is recommended not to modify them unless you intend to change the core architecture or functionality of the pipeline.
 
     | Parameter	| Default Value	| Description	|Can Be Modified?
@@ -244,3 +245,6 @@ You can find an example of a completed buildspec.yml file for the dataset ESC-50
     | AED_FOLDER_NAME | audio_event_detection |	The folder name for the use case, used to locate the dataset and scripts	| No
     | processing_step_name| Preprocess_`dataset_name`	| The name of the preprocessing step in the pipeline in SageMaker Studio, dynamically includes the dataset name |	Yes
     | modelzoo_version | v1 |	The version of the STM model zoo being used | No
+
+> [!TIP]
+You can find an example of a completed pipeline_parameters-example.py file for the dataset ESC-50 in the [pipeline_parameters-example file](./pipeline_parameters-example.py).

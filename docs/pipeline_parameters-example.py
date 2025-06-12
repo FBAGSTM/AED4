@@ -34,7 +34,6 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> Dic
     Return a dict that contains specific parameters pipeline for AED usecase
 
     Args:
-        dataset_name (str): The name of the dataset to be used. Defaults to "FSD50k".
         default_threshold (Union[float, None]): A threshold value that pipeline parameters need to be above. If None, a default value will be used.
 
     Returns:

@@ -1,12 +1,7 @@
-from sagemaker.workflow.parameters import (
-    ParameterFloat
-)
-
+from sagemaker.workflow.parameters import ParameterFloat
 from typing import Union, Dict, Any
 import yaml
 import os 
-
-base_dir = os.path.dirname(os.path.abspath(__file__))
 
 def get_dataset_name(aed_folder_name: str) -> str:
     """
@@ -19,7 +14,7 @@ def get_dataset_name(aed_folder_name: str) -> str:
         str: The name of the dataset specified in the YAML file.
     """
     try:
-        training_user_config_file = os.path.join(base_dir, aed_folder_name, "scripts", "training", "user_config.yaml")
+        training_user_config_file = os.path.join(aed_folder_name, "scripts", "training", "user_config.yaml")
         with open(training_user_config_file, "r", encoding="utf-8") as yaml_file:
             config = yaml.safe_load(yaml_file)
         return config.get("dataset", {}).get("name", "AED_Dataset")
@@ -34,7 +29,6 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> Dic
     Return a dict that contains specific parameters pipeline for AED usecase
 
     Args:
-        dataset_name (str): The name of the dataset to be used. Defaults to "FSD50k".
         default_threshold (Union[float, None]): A threshold value that pipeline parameters need to be above. If None, a default value will be used.
 
     Returns:
