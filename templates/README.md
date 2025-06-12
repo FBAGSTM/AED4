@@ -1,56 +1,43 @@
-# Buildspec Template for SageMaker Pipelines
-This repository provides a buildspec template (buildspec-template.yml) to help you configure and execute SageMaker pipelines. The template is designed to be flexible and easy to use, with placeholders for customization.
+# Buildspec for SageMaker Pipelines (AED Version)
 
-## How to Use the Template
-1. **Locate the Template**
+## Introduction
+This repository provides a `buildspec.yml` file to help you configure and execute SageMaker pipelines for audio evet detection pipeline. The guide is designed to be flexible and easy to use, with placeholders for customization. Additionally, this README includes a **Dataset Catalogue** for managing datasets like **ESC-50** and **FSD50K**, and instructions for integrating them into your pipeline.
 
-The template file is located in this folder as buildspec-template.yml. Copy this file to your project directory.
+> [!IMPORTANT]
+**Buildspec Relocation**:\
+This `buildspec.yml` file will be relocated and executed within the main repository [here](https://github.com/TBALSTM/STM32_AWS_CDK/tree/main/lib/ml/buildspec.yml) under the path `<STM32_AWS_IaC>/lib/ml` during the pipeline execution.\ A placeholder buildspec.yml file currently exists in the STM32_AWS_IaC repository, which will be replaced by this file. Please keep this in mind when configuring the buildspec commands and their functionality.<br/><br/>
+**Pipeline Naming Convention**\
+If the user calls this pipeline AED (Audio Event Detection), ensure that the dataset and configurations align with this use case.
 
-2. **Customize the Template**
 
-Open the file mlops/buildspec.yml and replace the following placeholders with your specific values:
+## Overview
+The `buildspec.yml` file is a critical component of the pipeline, defining the steps required to:
 
-- <DATASET_NAME>: The name of the dataset you are working with (e.g., ESC-50).
-- <DOWNLOAD_COMMAND>: The command to download the dataset (e.g., git clone <REPO_URL>).
-- **Note**: All other variables (e.g., SAGEMAKER_PROJECT_NAME, SAGEMAKER_PROJECT_ID, ARTIFACT_BUCKET, etc.) are already defined in the **common repository STM32_AWS_CDK** in the file lib/ml/sagemaker-pipeline.ts. You do not need to modify or define them manually here.
+1. Install dependencies.
+2. Prepare datasets.
+3. Execute the SageMaker pipeline.
 
-3. **Save the File**
-
-Save the modified file as buildspec.yml in your project directory.
-
-4. **Adjust the user_config.yaml File**
-
-After modifying the buildspec.yml file, ensure that the user_config.yaml file is updated to match your new dataset configuration.
-The user_config.yaml file is located in:
-- For training: mlops/audio_event_detection/scripts/training/user_config.yaml
-- For evaluation: mlops/audio_event_detection/scripts/evaluate/user_config.yaml
-
-Refer to the README files in those sections for more details on how to configure the user_config.yaml file.
-
-5. **Run the Pipeline**
-
-By pushing your changes to this repository, AWS CodePipeline will automatically be triggered. The pipeline will:
-- Retrieve the new dataset for your specified use case.
-- Execute the SageMaker pipeline with your changes.
-
-## Template Overview
-The buildspec-template.yml file is structured as follows:
+This file is structured into phases and includes placeholders for customization, such as dataset names and download commands.
 
 ### Artifacts
-Specifies the files or directories to be saved after the build:
-
+Artifacts specify the files or directories to be saved after the build process. These are typically outputs generated during the pipeline execution.
 ```yml
 artifacts:
   files:
     - /tmp/ml/**/*
   name: ml
 ```
+* files: Specifies the location of the files to be saved.
+* name: Defines the name of the artifact.
 
-### Phases
-The pipeline is divided into three phases:
+### Phase
+The pipeline is divided into three main phases: **Install, Pre-Build, and Build**.
 
-#### Install Phase
-Installs dependencies and sets up the environment:
+---
+
+1. **Install Phase**
+
+This phase sets up the environment and installs dependencies.
 
 ```yml
 install:
@@ -60,21 +47,22 @@ install:
     - echo "Installing dependencies..."
     - pip install --upgrade .
 ```
+* Purpose: Installs the required Python dependencies by running the [setup.py file](https://github.com/TBALSTM/STM32_AWS_CDK/tree/main/mlops/setup.py) located in the main repository.
+* Key Command: `pip install --upgrade .` ensures that the latest version of the dependencies is installed.
 
-#### Pre-Build Phase
-Prepares the dataset. You need to customize the following placeholders:
+---
 
-- <DATASET_NAME>: The name of the dataset (e.g., ESC-50).
-- <DOWNLOAD_COMMAND>: The command to download the dataset (e.g., git clone <REPO_URL>).
+2. **Pre-Build Phase**
 
-Example:
+This phase prepares the dataset for the pipeline. It includes downloading the dataset and uploading it to an S3 bucket if it doesn't already exist.
+
 ```yml
 pre_build:
   commands:
     - echo "Retrieving ML Dataset configuration for use case $USECASE_NAME"
 
-    - DATASET_NAME="<DATASET_NAME>"  # Example: "ESC-50"
-    - DOWNLOAD_COMMAND="<DOWNLOAD_COMMAND>"  # Example: "git clone <REPO_URL> ./temp"
+    - DATASET_NAME="<YOUR_DATASET_NAME>"
+    - DOWNLOAD_COMMAND="<YOUR_DOWNLOAD_COMMAND>"
 
     - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/$DATASET_NAME || NOT_EXIST=true
     - |
@@ -88,8 +76,20 @@ pre_build:
     - echo "Pre-build phase completed."
 ```
 
-#### Build Phase
-Executes the SageMaker pipeline with the dataset donwloaded in pre-build phase as source.
+* Purpose: Ensures the dataset is available in the S3 bucket for the pipeline to use.
+* Key Placeholders:
+  - `DATASET_NAME`: The name of your dataset
+  - `DOWNLOAD_COMMAND`: The command to download your dataset\
+  [For example, see the Dataset Catalogue](#dataset-catalogue)
+* Logic:
+  - Checks if the dataset already exists in the S3 bucket.
+  - If not, downloads the dataset to a temporary folder (temp) and uploads it to the S3 bucket.
+
+---
+
+3. **Build Phase**
+
+This phase executes the SageMaker pipeline using the prepared dataset.
 
 ```yml
 build:
@@ -105,8 +105,13 @@ build:
     - echo "Create/Update of the SageMaker Pipeline and execution completed."
 ```
 
-**Variables Defined in Common Repository**:
-The following variables are already defined in the repository STM32_AWS_CDK, at location: lib/ml/sagemaker-pipeline.ts and do not need to be modified in the template:
+* Purpose: Runs the SageMaker pipeline with the dataset prepared in the pre-build phase.
+* Key Commands:
+  - run-pipeline: Executes the pipeline with the specified parameters.
+  - aws s3 cp: Copies the evaluation results back to the local directory for further analysis.
+
+> [!NOTE]Variables Defined in Main Repository:
+Other Environnments Variables are already defined in the **repository STM32_AWS_IaC** during the[SageMaker Pipeline Definition](https://github.com/TBALSTM/STM32_AWS_CDK/tree/main/lib/ml/sagemaker-pipeline.ts). **You do not need to modified them in the file without touching the   all architecture.**
 
 | Variable Name | Description
 | :- | :- |
@@ -117,52 +122,75 @@ The following variables are already defined in the repository STM32_AWS_CDK, at 
 | ``AWS_REGION``| The AWS region where the pipeline is executed.
 | ``USECASE_NAME``| The name of the use case (e.g., pipeline-specific identifier).
 | ``SAGEMAKER_PROJECT_NAME_ID``| A combination of SAGEMAKER_PROJECT_NAME and SAGEMAKER_PROJECT_ID.
-                                                               
-**Example Configuration**
 
-Here’s an example of a completed buildspec.yml file for the dataset ESC-50:
+## How to Use the Buildspec
+1. **Locate the Buildspec**
+  
+    The buildspec file is located in this folder as mlops/buildspec.yml.
 
-```yml
-version: 0.2
+2. **Customize the Buildspec**
+    Open your [YAML builspec file](../mlops/buildspec.yml) and replace the following placeholders with your specific values:
 
-artifacts:
-  files:
-    - /tmp/ml/**/*
-  name: ml
+    - `DATASET_NAME`: The name of the dataset you are working with.
+    - `DOWNLOAD_COMMAND`: The command to download the dataset in a folder called **./temp**. It can be a multiple line command.
 
-phases:
-  install:
-    runtime-versions:
-      python: 3.8
-    commands:
-      - pip install --upgrade .
+3. **Save the File**
 
-  pre_build:
-    commands:
-      - DATASET_NAME="ESC-50"
-      - DOWNLOAD_COMMAND="git clone https://github.com/karolpiczak/ESC-50.git ./temp"
-      - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/$DATASET_NAME || NOT_EXIST=true
-      - |
-        if [ "$NOT_EXIST" = true ]; then
-          mkdir -p temp
-          eval $DOWNLOAD_COMMAND
-          aws s3 cp temp s3://${ARTIFACT_BUCKET}/train/datasets/$DATASET_NAME/ --recursive --quiet
-        fi
+    Save the modified file as `buildspec.yml` in your project directory.
 
-  build:
-    commands:
-      - export PYTHONUNBUFFERED=TRUE
-      - export SAGEMAKER_PROJECT_NAME_ID="${SAGEMAKER_PROJECT_NAME}-${SAGEMAKER_PROJECT_ID}"
-      - |
-        run-pipeline --module-name pipelines.stm.pipeline \
-          --role-arn $SAGEMAKER_PIPELINE_ROLE_ARN \
-          --tags "[{\"Key\":\"sagemaker:project-name\", \"Value\":\"${SAGEMAKER_PROJECT_NAME}\"}, {\"Key\":\"sagemaker:project-id\", \"Value\":\"${SAGEMAKER_PROJECT_ID}\"}]" \
-          --kwargs "{\"usecase_name\":\"ESC-50\",\"region\":\"${AWS_REGION}\",\"role\":\"${SAGEMAKER_PIPELINE_ROLE_ARN}\",\"default_bucket\":\"${ARTIFACT_BUCKET}\",\"pipeline_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"model_package_group_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"base_job_prefix\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"sagemaker_project_name\":\"${SAGEMAKER_PROJECT_NAME}\"}"
-      - aws s3 cp s3://${ARTIFACT_BUCKET}/evaluation/build/ /tmp/ml --recursive
-      - echo "Create/Update of the SageMaker Pipeline and execution completed."
-```
+4. **Adjust AI configurations file**
 
----
-**Note:**
+    After modifying the `buildspec.yml` file, ensure that the `user_config.yaml` file is updated to match your new dataset configuration.
+    The `user_config.yaml` file is located in:
+    - [Here for training](../mlops/audio_event_detection/scripts/training/user_config.yaml)
+    - [Here for evaluation](../mlops/audio_event_detection/scripts/evaluate/user_config.yaml)
 
-This template and documentation provide a clear starting point for configuring and running SageMaker pipelines. By leveraging the variables already defined in STM32_AWS_CDK/lib/ml/sagemaker-pipeline.ts, you only need to focus on customizing the dataset-specific details (DATASET_NAME and DOWNLOAD_COMMAND). This ensures consistency and reduces the risk of errors.
+    > Refer to the README files in those sections for more details on how to configure the `user_config.yaml` file.
+
+5. **Run the Pipeline**
+
+    By pushing your changes to this repository, AWS CodePipeline will automatically be triggered. The pipeline will:
+    - Retrieve the new dataset for your specified use case.
+    - Execute the SageMaker pipeline with your changes.
+
+## Dataset Catalogue
+This section provides a catalogue of datasets that can be used in the pipeline. Each dataset includes its name, download command, and a brief description.
+
+1. `ESC-50`
+
+    `Dataset Name`: ESC-50\
+    `Download Command`:
+    ```bash
+    git clone https://github.com/karolpiczak/ESC-50.git ./temp
+    ```
+    > A dataset for sound event classification, containing 2,000 labeled environmental audio recordings across 50 classes. [See More Infos](https://github.com/karolpiczak/ESC-50)
+
+2. `FSD50K`
+
+    `Dataset Name`: FSD50K\
+    `Download Command`:
+    ```bash
+    echo 'Downloading FSD50K Dataset...' && \
+    echo 'Downloading Dev Audio...' && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z01 -q && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z02 -q && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z03 -q && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z04 -q && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z05 -q && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.zip -q && \
+    zip -q -s 0 FSD50K.dev_audio.zip --out FSD50K.dev_audio-unsplit.zip && \
+    echo 'Downloading Eval Audio...' && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.eval_audio.z01 -q && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.eval_audio.zip -q && \
+    zip -q -s 0 FSD50K.eval_audio.zip --out FSD50K.eval_audio-unsplit.zip && \
+    echo 'Downloading Ground Truth...' && \
+    wget https://zenodo.org/records/4060432/files/FSD50K.ground_truth.zip -q && \
+    echo 'Unzipping...' && \
+    unzip -q FSD50K.ground_truth.zip -d temp/ && \
+    unzip -q FSD50K.eval_audio-unsplit.zip -d temp/ && \
+    unzip -q FSD50K.dev_audio-unsplit.zip -d temp/"
+    ```
+    > The FSD50K dataset is a large-scale, open dataset for sound event detection and classification. It contains over 51,000 audio recordings sourced from Freesound, a collaborative sound database. The dataset is organized into two main subsets: development (Dev) and evaluation (Eval), and it covers a wide range of sound events across 200 classes based on the AudioSet ontology. [See More Infos](https://zenodo.org/records/4060432)
+
+> [!TIP]
+You can find an example of a completed buildspec.yml file for the dataset ESC-50 in the [buildspec-example.yml file](./buildspec-example.yml).
