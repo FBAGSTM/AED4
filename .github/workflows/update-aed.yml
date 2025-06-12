@@ -6,8 +6,6 @@ on:
       - main
     path-ignore:
       - 'docs/**'
-      - '**/*.md'
-
 
 jobs:
   call-reusable-workflow:

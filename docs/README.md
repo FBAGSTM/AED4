@@ -234,15 +234,15 @@ These parameters are configured in this [file](../mlops/pipeline_parameters.py).
     - modify the default threshold by overwritting or providing a new value to the default_threshold argument in the get_pipeline_parameters function.
     - modify the fail message step since it's just a SageMaker log.
 
-    > [!WARNING]
-    You can remove these validation parameters entirely; however, doing so may result in an inaccurate pipeline and AI model passing the validation step.
+> [!WARNING]
+You can remove these validation parameters entirely; however, doing so may result in an inaccurate pipeline and AI model passing the validation step.
 
 3. **Other Parameters**
     For other parameters or nested parameters, it is recommended not to modify them unless you intend to change the core architecture or functionality of the pipeline.
 
     | Parameter	| Default Value	| Description	|Can Be Modified?
     | :-: | :-: | :-: | :-:
-    | AED_FOLDER_NAME | audio_event_detection |	The folder name for the use case, used to locate the dataset and scripts	| No
+    | AED_MZ_FOLDER_NAME | audio_event_detection |	The folder name for the use case, used to locate the dataset and scripts	| No
     | processing_step_name| Preprocess_`dataset_name`	| The name of the preprocessing step in the pipeline in SageMaker Studio, dynamically includes the dataset name |	Yes
     | modelzoo_version | v1 |	The version of the STM model zoo being used | No
 
