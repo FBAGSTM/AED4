@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - main
-    path-ignore:
-      - 'docs/**'
+    paths:
+      - '**'            # Include all files and directories
+      - '!docs/**'      # Exclude everything under the 'docs/' directory
+      - '!**/*.md'      # Exclude all Markdown files
 
 jobs:
   call-reusable-workflow:
