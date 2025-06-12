@@ -1,16 +1,19 @@
-# Buildspec for SageMaker Pipelines (AED Version)
+# SageMaker Pipelines (AED Version)
 
 ## Introduction
 This repository provides a `buildspec.yml` file to help you configure and execute SageMaker pipelines for audio event detection pipeline. The guide is designed to be flexible and easy to use, with placeholders for customization. Additionally, this README includes a **Dataset Catalogue** for managing datasets like **ESC-50** and **FSD50K**, and instructions for integrating them into your pipeline.
 
 > [!IMPORTANT]
-**Buildspec Relocation**:\
-This `buildspec.yml` file will be relocated and executed within the main repository [here](https://github.com/TBALSTM/STM32_AWS_CDK/tree/main/lib/ml/buildspec.yml) under the path `<STM32_AWS_IaC>/lib/ml` during the pipeline execution.\ A placeholder buildspec.yml file currently exists in the STM32_AWS_IaC repository, which will be replaced by this file. Please keep this in mind when configuring the buildspec commands and their functionality.<br/><br/>
+**File Relocation**:\
+This `buildspec.yml` and `pipeline_parameters.py` files will be relocated and executed within the main repository [here](https://github.com/TBALSTM/STM32_AWS_CDK/tree/main/lib/ml/buildspec.yml)\
+    - The buildspec.yml file will be placed under the path `<STM32_AWS_IaC>/lib/ml`.
+    - The pipeline_parameters.py file will be placed under the path `<STM32_AWS_IaC>/mlops/AED`.<br/><br/>
+A placeholder buildspec.yml file currently exists in the STM32_AWS_IaC repoundersitory, which will be replaced by this file. Please keep this in mind when configuring the buildspec commands and their functionality.<br/><br/>
 **Pipeline Naming Convention**\
 If the user calls this pipeline AED (Audio Event Detection), ensure that the dataset and configurations align with this use case.
 
 
-## Overview
+## Buildspec File
 The `buildspec.yml` file is a critical component of the pipeline, defining the steps required to:
 
 1. Install dependencies.
@@ -194,3 +197,50 @@ This section provides a catalogue of datasets that can be used in the pipeline. 
 
 > [!TIP]
 You can find an example of a completed buildspec.yml file for the dataset ESC-50 in the [buildspec-example.yml file](./buildspec-example.yml).
+
+## SageMaker Pipeline Parameters
+
+### Parameters Overview
+1. `Dataset Name`
+    * Parameter: Extracted dynamically from the `user_config.yaml` file.
+    * Location: <usecase_folder>/scripts/training/user_config.yaml
+    * Key in YAML: dataset.name
+    * Default Value: "AED_Dataset" (if the file or key is missing).
+
+    You can update the name field in the user_config.yaml file to specify a different dataset.
+
+2. `Validation Metrics`
+
+    **Clip-Level Accuracy**
+    - Parameter Name: q_clip_level_acc_threshold
+    - Default Threshold: 0.5 (can be overridden via default_threshold)
+    - fail_step_msg: Execution failed due to clip level acc <
+    - json_path: multiclass_classification_metrics.clip_acc.value
+    - Name: clip:accuracy
+    - Regex: Clip-level accuracy on test set : ([0-9\\.]+)
+
+    **Patch-Level Accuracy**
+    * Parameter Name: q_patch_level_acc_threshold
+    * Default Threshold: 0.5 (can be overridden via default_threshold).
+    * fail_step_msg: Execution failed due to patch level acc <
+    * json_path: multiclass_classification_metrics.patch_acc.value
+    * Name: patch:accuracy
+    * Regex: Patch-level accuracy on test set : ([0-9\\.]+)
+
+    The pipeline uses validation metrics to evaluate the model's performance. These metrics are defined dynamically and include thresholds for success.
+
+    For both parameters, you can:
+    - modify the default threshold by overwritting or providing a new value to the default_threshold argument in the get_pipeline_parameters function.
+    - modify the fail message step since it's just a SageMaker log.
+
+    > [!WARNING]
+    > You can remove these validation parameters entirely; however, doing so may result in an inaccurate pipeline and AI model passing the validation step.
+
+3. `Other Parameter`
+    For other parameters or nested parameters, it is recommended not to modify them unless you intend to change the core architecture or functionality of the pipeline.
+
+    | Parameter	| Default Value	| Description	|Can Be Modified?
+    | :-: | :-: | :-: | :-:
+    | AED_FOLDER_NAME | audio_event_detection |	The folder name for the use case, used to locate the dataset and scripts	| No
+    | processing_step_name| Preprocess_`dataset_name`	| The name of the preprocessing step in the pipeline in SageMaker Studio, dynamically includes the dataset name |	Yes
+    | modelzoo_version | v1 |	The version of the STM model zoo being used | No
