@@ -1,7 +1,7 @@
 # Buildspec for SageMaker Pipelines (AED Version)
 
 ## Introduction
-This repository provides a `buildspec.yml` file to help you configure and execute SageMaker pipelines for audio evet detection pipeline. The guide is designed to be flexible and easy to use, with placeholders for customization. Additionally, this README includes a **Dataset Catalogue** for managing datasets like **ESC-50** and **FSD50K**, and instructions for integrating them into your pipeline.
+This repository provides a `buildspec.yml` file to help you configure and execute SageMaker pipelines for audio event detection pipeline. The guide is designed to be flexible and easy to use, with placeholders for customization. Additionally, this README includes a **Dataset Catalogue** for managing datasets like **ESC-50** and **FSD50K**, and instructions for integrating them into your pipeline.
 
 > [!IMPORTANT]
 **Buildspec Relocation**:\
@@ -110,7 +110,7 @@ build:
   - run-pipeline: Executes the pipeline with the specified parameters.
   - aws s3 cp: Copies the evaluation results back to the local directory for further analysis.
 
-> [!NOTE]Variables Defined in Main Repository:
+> [!NOTE]
 Other Environnments Variables are already defined in the **repository STM32_AWS_IaC** during the[SageMaker Pipeline Definition](https://github.com/TBALSTM/STM32_AWS_CDK/tree/main/lib/ml/sagemaker-pipeline.ts). **You do not need to modified them in the file without touching the   all architecture.**
 
 | Variable Name | Description
