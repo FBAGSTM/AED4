@@ -14,7 +14,16 @@ def get_dataset_name(aed_folder_name: str) -> str:
         str: The name of the dataset specified in the YAML file.
     """
     try:
-        training_user_config_file = os.path.join(aed_folder_name, "scripts", "training", "user_config.yaml")
+        current_dir = os.getcwd()
+        print(f"Current working directory: {current_dir}")
+        print(f"Contents of '{current_dir}':")
+        for item in os.listdir(current_dir):
+            item_path = os.path.join(current_dir, item)
+            if os.path.isdir(item_path):
+                print(f"  [Folder] {item}")
+            else:
+                print(f"  [File] {item}")
+        training_user_config_file = os.path.join("AED", aed_folder_name, "scripts", "training", "user_config.yaml")
         with open(training_user_config_file, "r", encoding="utf-8") as yaml_file:
             config = yaml.safe_load(yaml_file)
         return config.get("dataset", {}).get("name", "AED_Dataset")
