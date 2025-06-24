@@ -1,0 +1,7 @@
+{
+  "name": "Audio Event Detection",
+  "author": "STMicroelectronics - AIS",
+  "version": "1.0.0",
+  "license": "MIT",
+  "tags": ["audio", "event-detection", "STM32_U5"]
+}
