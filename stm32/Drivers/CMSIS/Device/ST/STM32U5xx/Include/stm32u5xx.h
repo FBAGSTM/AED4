@@ -1,60 +1,60 @@
 /**
-  ******************************************************************************
-  * @file    stm32u5xx.h
-  * @author  MCD Application Team
-  * @brief   CMSIS STM32U5xx Device Peripheral Access Layer Header File.
-  *
-  *          The file is the unique include file that the application programmer
-  *          is using in the C source code, usually in main.c. This file contains:
-  *           - Configuration section that allows to select:
-  *              - The STM32U5xx device used in the target application
-  *              - To use or not the peripheral's drivers in application code(i.e.
-  *                code will be based on direct access to peripheral's registers
-  *                rather than drivers API), this option is controlled by
-  *                "#define USE_HAL_DRIVER"
-  *
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32u5xx.h
+ * @author  MCD Application Team
+ * @brief   CMSIS STM32U5xx Device Peripheral Access Layer Header File.
+ *
+ *          The file is the unique include file that the application programmer
+ *          is using in the C source code, usually in main.c. This file contains:
+ *           - Configuration section that allows to select:
+ *              - The STM32U5xx device used in the target application
+ *              - To use or not the peripheral's drivers in application code(i.e.
+ *                code will be based on direct access to peripheral's registers
+ *                rather than drivers API), this option is controlled by
+ *                "#define USE_HAL_DRIVER"
+ *
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 
 /** @addtogroup CMSIS
-  * @{
-  */
+ * @{
+ */
 
 /** @addtogroup stm32u5xx
-  * @{
-  */
+ * @{
+ */
 
 #ifndef STM32U5xx_H
 #define STM32U5xx_H
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif /* __cplusplus */
 
 /** @addtogroup Library_configuration_section
-  * @{
-  */
+ * @{
+ */
 
 /**
-  * @brief STM32 Family
-  */
+ * @brief STM32 Family
+ */
 #if !defined (STM32U5)
 #define STM32U5
 #endif /* STM32U5 */
 
 /* Uncomment the line below according to the target STM32U5 device used in your
-   application
-  */
+ application
+ */
 
 #if !defined (STM32U575xx)  && !defined (STM32U585xx) \
     && !defined (STM32U595xx)  && !defined (STM32U599xx) \
@@ -68,8 +68,8 @@
 #endif
 
 /*  Tip: To avoid modifying this file each time you need to switch between these
-        devices, you can define the device in your toolchain compiler preprocessor.
-  */
+ devices, you can define the device in your toolchain compiler preprocessor.
+ */
 #if !defined  (USE_HAL_DRIVER)
 /**
  * @brief Comment the line below if you will not use the peripherals drivers.
@@ -80,8 +80,8 @@
 #endif /* USE_HAL_DRIVER */
 
 /**
-  * @brief CMSIS Device version number 1.1.0
-  */
+ * @brief CMSIS Device version number 1.1.0
+ */
 #define __STM32U5_CMSIS_VERSION_MAIN   (0x01) /*!< [31:24] main version */
 #define __STM32U5_CMSIS_VERSION_SUB1   (0x01) /*!< [23:16] sub1 version */
 #define __STM32U5_CMSIS_VERSION_SUB2   (0x00) /*!< [15:8]  sub2 version */
@@ -92,17 +92,17 @@
                                        |(__STM32U5_CMSIS_VERSION_RC))
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /** @addtogroup Device_Included
-  * @{
-  */
+ * @{
+ */
 
 #if defined(STM32U575xx)
   #include "stm32u575xx.h"
 #elif defined(STM32U585xx)
-  #include "stm32u585xx.h"
+#include "stm32u585xx.h"
 #elif defined(STM32U595xx)
   #include "stm32u595xx.h"
 #elif defined(STM32U599xx)
@@ -116,39 +116,38 @@
 #endif
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /** @addtogroup Exported_types
-  * @{
-  */
+ * @{
+ */
 typedef enum
 {
-  RESET = 0,
-  SET = !RESET
-} FlagStatus, ITStatus;
+	RESET = 0,
+	SET = !RESET
+}FlagStatus, ITStatus;
 
 typedef enum
 {
-  DISABLE = 0,
-  ENABLE = !DISABLE
-} FunctionalState;
+	DISABLE = 0,
+	ENABLE = !DISABLE
+}FunctionalState;
 #define IS_FUNCTIONAL_STATE(STATE) (((STATE) == DISABLE) || ((STATE) == ENABLE))
 
 typedef enum
 {
-  SUCCESS = 0,
-  ERROR = !SUCCESS
-} ErrorStatus;
+	SUCCESS = 0,
+	ERROR = !SUCCESS
+}ErrorStatus;
 
 /**
-  * @}
-  */
-
+ * @}
+ */
 
 /** @addtogroup Exported_macros
-  * @{
-  */
+ * @{
+ */
 #define SET_BIT(REG, BIT)     ((REG) |= (BIT))
 
 #define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
@@ -220,13 +219,12 @@ typedef enum
 
 #define POSITION_VAL(VAL)     (__CLZ(__RBIT(VAL)))
 
-
 /**
-  * @}
-  */
+ * @}
+ */
 
 #if defined (USE_HAL_DRIVER)
- #include "stm32u5xx_hal.h"
+#include "stm32u5xx_hal.h"
 #endif /* USE_HAL_DRIVER */
 
 #ifdef __cplusplus
@@ -235,13 +233,10 @@ typedef enum
 
 #endif /* STM32U5xx_H */
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
-
-
-
+ * @}
+ */
 
