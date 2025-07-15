@@ -1,0 +1,74 @@
+general:
+  project_name: aed_project
+  model_path:  ../../stm32ai-modelzoo/audio_event_detection/yamnet/ST_pretrainedmodel_public_dataset/esc10/yamnet_1024_64x96_tl/yamnet_1024_64x96_tl_qdq_int8.onnx
+  logs_dir: logs
+  saved_models_dir: saved_models
+  global_seed: 120
+  gpu_memory_limit: 5
+  display_figures: True 
+  batch_size: 16 # Used to batch the prediction dataset
+
+operation_mode: prediction 
+#choices=['training' , 'evaluation', 'prediction', 'deployment', 'quantization', 'benchmarking',
+#        'chain_tbqeb','chain_tqe',' chain_eqe','chain_qb','chain_eqeb','chain_qd ']
+
+dataset:
+  name: esc10
+  class_names: ['dog', 'chainsaw', 'crackling_fire', 'helicopter', 'rain', 'crying_baby', 'clock_tick', 'sneezing', 'rooster', 'sea_waves']
+  file_extension: '.wav'
+
+  multi_label: False 
+  use_garbage_class: False 
+  n_samples_per_garbage_class: 2
+  expand_last_dim: True
+  seed: 120 # Optional, there is a default seed
+  to_cache: True
+  shuffle: True
+
+preprocessing:
+  min_length: 1
+  max_length : 10
+  target_rate: 16000
+  top_db: 60
+  frame_length: 3200
+  hop_length: 3200
+  trim_last_second: False
+  lengthen : 'after'
+
+feature_extraction:
+  patch_length: 96
+  n_mels: 64
+  overlap: 0.25
+  n_fft: 512
+  hop_length: 160
+  window_length: 400
+  window: hann
+  center: False
+  pad_mode: constant
+  power: 1.0
+  fmin: 125
+  fmax: 7500
+  norm: None
+  htk : True
+  to_db : False
+  include_last_patch: False
+
+prediction:
+  test_files_path: ./datasets/predict
+  profile: profile_O3
+  input_type: int8     # int8 / uint8 / float32
+  output_type: float32    # int8 / uint8 / float32
+  input_chpos: chfirst    # chlast / chfirst
+  output_chpos: chfirst   # chlast / chfirst
+  target: stedgeai_n6 # host, stedgeai_host, stedgeai_n6
+
+tools:
+   stedgeai:
+      path_to_stedgeai: C:/ST/STEdgeAI/2.1/Utilities/windows/stedgeai.exe
+
+mlflow:
+  uri: ./src/experiments_outputs/mlruns
+
+hydra:
+  run:
+    dir: ./src/experiments_outputs/${now:%Y_%m_%d_%H_%M_%S}
