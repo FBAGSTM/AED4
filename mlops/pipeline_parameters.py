@@ -42,7 +42,7 @@ def get_pipeline_parameters(default_threshold: Union[float, None] = None) -> Dic
     config = {
         "use_case_modelzoo_folder": AED_MZ_FOLDER_NAME,
         "processing_step_name": f"Preprocess_{get_dataset_name(AED_MZ_FOLDER_NAME)}",
-        "modelzoo_version": "v1",
+        "train_operation_mode": "chain_tqe",
         "validation_parameters": [
             {
                 "parameter": {

@@ -76,7 +76,7 @@ stm32ai:
   serie: STM32U5
   IDE: GCC
   verbosity: 1
-  version: 7.3.0
+  version: 10.0.0
   optimization: balanced
   footprints_on_target: B-U585I-IOT02A
   path_to_stm32ai: STM32Cube\Repository\Packs\STMicroelectronics\X-CUBE-AI\8.0.0\Utilities\windows\stm32ai.exe
