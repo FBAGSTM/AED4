@@ -13,7 +13,7 @@ phases:
       - pip install --upgrade .
 
   pre_build:
-    commands:  
+    commands:
       - echo "Retrieving ML Dataset configuration for use case $USECASE_NAME"
 
       - DATASET_NAME="ESC-50"
@@ -39,6 +39,6 @@ phases:
         run-pipeline --module-name pipelines.stm.pipeline \
           --role-arn $SAGEMAKER_PIPELINE_ROLE_ARN \
           --tags "[{\"Key\":\"sagemaker:project-name\", \"Value\":\"${SAGEMAKER_PROJECT_NAME}\"}, {\"Key\":\"sagemaker:project-id\", \"Value\":\"${SAGEMAKER_PROJECT_ID}\"}]" \
-          --kwargs "{\"usecase_name\":\"${USECASE_NAME}\",\"dataset_name\":\"${DATASET_NAME}\",\"region\":\"${AWS_REGION}\",\"role\":\"${SAGEMAKER_PIPELINE_ROLE_ARN}\",\"default_bucket\":\"${ARTIFACT_BUCKET}\",\"pipeline_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"model_package_group_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"base_job_prefix\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"sagemaker_project_name\":\"${SAGEMAKER_PROJECT_NAME}\"}"
+          --kwargs "{\"usecase_name\":\"${USECASE_NAME}\",\"region\":\"${AWS_REGION}\",\"role\":\"${SAGEMAKER_PIPELINE_ROLE_ARN}\",\"default_bucket\":\"${ARTIFACT_BUCKET}\",\"pipeline_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"model_package_group_name\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"base_job_prefix\":\"${SAGEMAKER_PROJECT_NAME_ID}\",\"sagemaker_project_name\":\"${SAGEMAKER_PROJECT_NAME}\"}"
       - aws s3 cp s3://${ARTIFACT_BUCKET}/codegen/build/ /tmp/ml --recursive
       - echo "Create/Update of the SageMaker Pipeline and execution completed."
