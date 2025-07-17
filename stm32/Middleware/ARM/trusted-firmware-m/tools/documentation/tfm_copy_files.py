@@ -27,9 +27,9 @@ def tfm_copy_files():
     for _path in document_scan_dirs:
         _path = os.path.abspath(os.path.join(tfm_def_root_dir, _path))
         for ext in document_scan_ext:
-                doc_files.extend([f for f in glob(os.path.join(_path,
-                                                               "**/*%s" % ext),
-                                  recursive=True)])
+            doc_files.extend(
+                [f for f in glob(os.path.join(_path, "**/*%s" % ext), recursive=True)]
+            )
 
     # Add the extra files
     for _doc_file in documents_extra:
@@ -38,12 +38,17 @@ def tfm_copy_files():
             doc_files.append(_doc_file)
 
     # Clean up all files in target dir except conf.py and tfm_env.py
-    files = [f for f in
-             glob("*", recursive=False) if f not in ["conf.py",
-                                                     tfm_def_conf_out_file,
-                                                     os.path.basename(
-                                                        tfm_def_doxy_output_dir),
-                                                     "tfm_env.py"]]
+    files = [
+        f
+        for f in glob("*", recursive=False)
+        if f
+        not in [
+            "conf.py",
+            tfm_def_conf_out_file,
+            os.path.basename(tfm_def_doxy_output_dir),
+            "tfm_env.py",
+        ]
+    ]
     for f in files:
         if os.path.isfile(f):
             os.remove(f)
@@ -71,9 +76,7 @@ def tfm_copy_files():
 if tfm_def_build_doxygen:
     # if conf file is not provided by cmake
     if tfm_def_render_cmake:
-        render_cmake_file(cmake_env,
-                          tfm_def_doxygen_in_file,
-                          tfm_def_doxygen_out_file)
+        render_cmake_file(cmake_env, tfm_def_doxygen_in_file, tfm_def_doxygen_out_file)
     # Call doxygen to generate the documentation
     doxygen_bin = find_package("doxygen")
     call([doxygen_bin, tfm_def_doxygen_out_file])

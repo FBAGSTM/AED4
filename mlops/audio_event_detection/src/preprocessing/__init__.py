@@ -8,6 +8,9 @@
 
 from .preprocess import preprocess, preprocess_input, postprocess_output
 from .data_loader import load_dataset, load_audio_sample
-from .dataset_utils.fsd50k.unsmear_labels import unsmear_labels, make_model_zoo_compatible
+from .dataset_utils.fsd50k.unsmear_labels import (
+    unsmear_labels,
+    make_model_zoo_compatible,
+)
 from .feature_extraction import get_patches
 from .time_domain_preprocessing import load_and_reformat

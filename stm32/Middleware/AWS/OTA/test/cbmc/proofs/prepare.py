@@ -21,18 +21,19 @@ def create_cbmc_batch_yaml(folder):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
-            check=True
+            check=True,
         )
     except subprocess.CalledProcessError as error:
-        raise UserWarning("Failed to create {} in {}: "
-                          "command was '{}': "
-                          "error was '{}'"
-                          .format(CBMC_BATCH_YAML, folder,
-                                  ' '.join(error.cmd),
-                                  error.stderr.strip())) from None
+        raise UserWarning(
+            "Failed to create {} in {}: "
+            "command was '{}': "
+            "error was '{}'".format(
+                CBMC_BATCH_YAML, folder, " ".join(error.cmd), error.stderr.strip()
+            )
+        ) from None
 
 
-def create_cbmc_batch_yaml_files(root='.'):
+def create_cbmc_batch_yaml_files(root="."):
     """Create cbmc-batch.yaml in all directories under root."""
 
     for folder, _, files in os.walk(root):

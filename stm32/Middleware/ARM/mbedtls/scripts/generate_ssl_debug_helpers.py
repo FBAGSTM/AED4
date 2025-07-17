@@ -31,17 +31,19 @@ from mbedtls_dev import build_tree
 
 def remove_c_comments(string):
     """
-        Remove C style comments from input string
+    Remove C style comments from input string
     """
     string_pattern = r"(?P<string>\".*?\"|\'.*?\')"
     comment_pattern = r"(?P<comment>/\*.*?\*/|//[^\r\n]*$)"
-    pattern = re.compile(string_pattern + r'|' + comment_pattern,
-                         re.MULTILINE | re.DOTALL)
+    pattern = re.compile(
+        string_pattern + r"|" + comment_pattern, re.MULTILINE | re.DOTALL
+    )
 
     def replacer(match):
-        if match.lastgroup == 'comment':
+        if match.lastgroup == "comment":
             return ""
         return match.group()
+
     return pattern.sub(replacer, string)
 
 
@@ -51,37 +53,39 @@ class CondDirectiveNotMatch(Exception):
 
 def preprocess_c_source_code(source, *classes):
     """
-        Simple preprocessor for C source code.
+    Simple preprocessor for C source code.
 
-        Only processses condition directives without expanding them.
-        Yield object according to the classes input. Most match firstly
+    Only processses condition directives without expanding them.
+    Yield object according to the classes input. Most match firstly
 
-        If the directive pair does not match , raise CondDirectiveNotMatch.
+    If the directive pair does not match , raise CondDirectiveNotMatch.
 
-        Assume source code does not include comments and compile pass.
+    Assume source code does not include comments and compile pass.
 
     """
 
-    pattern = re.compile(r"^[ \t]*#[ \t]*" +
-                         r"(?P<directive>(if[ \t]|ifndef[ \t]|ifdef[ \t]|else|endif))" +
-                         r"[ \t]*(?P<param>(.*\\\n)*.*$)",
-                         re.MULTILINE)
+    pattern = re.compile(
+        r"^[ \t]*#[ \t]*"
+        + r"(?P<directive>(if[ \t]|ifndef[ \t]|ifdef[ \t]|else|endif))"
+        + r"[ \t]*(?P<param>(.*\\\n)*.*$)",
+        re.MULTILINE,
+    )
     stack = []
 
     def _yield_objects(s, d, p, st, end):
         """
-            Output matched source piece
+        Output matched source piece
         """
         nonlocal stack
-        start_line, end_line = '', ''
+        start_line, end_line = "", ""
         if stack:
-            start_line = '#{} {}'.format(d, p)
-            if d == 'if':
-                end_line = '#endif /* {} */'.format(p)
-            elif d == 'ifdef':
-                end_line = '#endif /* defined({}) */'.format(p)
+            start_line = "#{} {}".format(d, p)
+            if d == "if":
+                end_line = "#endif /* {} */".format(p)
+            elif d == "ifdef":
+                end_line = "#endif /* defined({}) */".format(p)
             else:
-                end_line = '#endif /* !defined({}) */'.format(p)
+                end_line = "#endif /* !defined({}) */".format(p)
         has_instance = False
         for cls in classes:
             for instance in cls.extract(s, st, end):
@@ -94,11 +98,11 @@ def preprocess_c_source_code(source, *classes):
 
     for match in pattern.finditer(source):
 
-        directive = match.groupdict()['directive'].strip()
-        param = match.groupdict()['param']
+        directive = match.groupdict()["directive"].strip()
+        param = match.groupdict()["param"]
         start, end = match.span()
 
-        if directive in ('if', 'ifndef', 'ifdef'):
+        if directive in ("if", "ifndef", "ifdef"):
             stack.append((directive, param, start, end))
             continue
 
@@ -106,23 +110,19 @@ def preprocess_c_source_code(source, *classes):
             raise CondDirectiveNotMatch()
 
         pair_directive, pair_param, pair_start, pair_end = stack.pop()
-        yield from _yield_objects(source,
-                                  pair_directive,
-                                  pair_param,
-                                  pair_end,
-                                  start)
+        yield from _yield_objects(source, pair_directive, pair_param, pair_end, start)
 
-        if directive == 'endif':
+        if directive == "endif":
             continue
 
-        if pair_directive == 'if':
-            directive = 'if'
+        if pair_directive == "if":
+            directive = "if"
             param = "!( {} )".format(pair_param)
-        elif pair_directive == 'ifdef':
-            directive = 'ifndef'
+        elif pair_directive == "ifdef":
+            directive = "ifndef"
             param = pair_param
         else:
-            directive = 'ifdef'
+            directive = "ifdef"
             param = pair_param
 
         stack.append((directive, param, start, end))
@@ -131,56 +131,58 @@ def preprocess_c_source_code(source, *classes):
 
 class EnumDefinition:
     """
-        Generate helper functions around enumeration.
+    Generate helper functions around enumeration.
 
-        Currently, it generate translation function from enum value to string.
-        Enum definition looks like:
-        [typedef] enum [prefix name] { [body] } [suffix name];
+    Currently, it generate translation function from enum value to string.
+    Enum definition looks like:
+    [typedef] enum [prefix name] { [body] } [suffix name];
 
-        Known limitation:
-        - the '}' and ';' SHOULD NOT exist in different macro blocks. Like
-        ```
-        enum test {
-            ....
-        #if defined(A)
-            ....
-        };
-        #else
-            ....
-        };
-        #endif
-        ```
+    Known limitation:
+    - the '}' and ';' SHOULD NOT exist in different macro blocks. Like
+    ```
+    enum test {
+        ....
+    #if defined(A)
+        ....
+    };
+    #else
+        ....
+    };
+    #endif
+    ```
     """
 
     @classmethod
     def extract(cls, source_code, start=0, end=-1):
-        enum_pattern = re.compile(r'enum\s*(?P<prefix_name>\w*)\s*' +
-                                  r'{\s*(?P<body>[^}]*)}' +
-                                  r'\s*(?P<suffix_name>\w*)\s*;',
-                                  re.MULTILINE | re.DOTALL)
+        enum_pattern = re.compile(
+            r"enum\s*(?P<prefix_name>\w*)\s*"
+            + r"{\s*(?P<body>[^}]*)}"
+            + r"\s*(?P<suffix_name>\w*)\s*;",
+            re.MULTILINE | re.DOTALL,
+        )
 
         for match in enum_pattern.finditer(source_code, start, end):
-            yield EnumDefinition(source_code,
-                                 span=match.span(),
-                                 group=match.groupdict())
+            yield EnumDefinition(
+                source_code, span=match.span(), group=match.groupdict()
+            )
 
     def __init__(self, source_code, span=None, group=None):
         assert isinstance(group, dict)
-        prefix_name = group.get('prefix_name', None)
-        suffix_name = group.get('suffix_name', None)
-        body = group.get('body', None)
+        prefix_name = group.get("prefix_name", None)
+        suffix_name = group.get("suffix_name", None)
+        body = group.get("body", None)
         assert prefix_name or suffix_name
         assert body
         assert span
         # If suffix_name exists, it is a typedef
-        self._prototype = suffix_name if suffix_name else 'enum ' + prefix_name
+        self._prototype = suffix_name if suffix_name else "enum " + prefix_name
         self._name = suffix_name if suffix_name else prefix_name
         self._body = body
         self._source = source_code
         self._span = span
 
     def __repr__(self):
-        return 'Enum({},{})'.format(self._name, self._span)
+        return "Enum({},{})".format(self._name, self._span)
 
     def __str__(self):
         return repr(self)
@@ -190,13 +192,13 @@ class EnumDefinition:
 
     def generate_tranlation_function(self):
         """
-            Generate function for translating value to string
+        Generate function for translating value to string
         """
         translation_table = []
 
         for line in self._body.splitlines():
 
-            if line.strip().startswith('#'):
+            if line.strip().startswith("#"):
                 # Preprocess directive, keep it in table
                 translation_table.append(line.strip())
                 continue
@@ -204,16 +206,18 @@ class EnumDefinition:
             if not line.strip():
                 continue
 
-            for field in line.strip().split(','):
+            for field in line.strip().split(","):
                 if not field.strip():
                     continue
                 member = field.strip().split()[0]
                 translation_table.append(
-                    '{space}[{member}] = "{member}",'.format(member=member,
-                                                             space=' '*8)
+                    '{space}[{member}] = "{member}",'.format(
+                        member=member, space=" " * 8
+                    )
                 )
 
-        body = textwrap.dedent('''\
+        body = textwrap.dedent(
+            """\
             const char *{name}_str( {prototype} in )
             {{
                 const char * in_to_str[]=
@@ -228,17 +232,19 @@ class EnumDefinition:
                 }}
                 return in_to_str[ in ];
             }}
-                    ''')
-        body = body.format(translation_table='\n'.join(translation_table),
-                           name=self._name,
-                           prototype=self._prototype)
-        prototype = 'const char *{name}_str( {prototype} in );\n'
-        prototype = prototype.format(name=self._name,
-                                     prototype=self._prototype)
+                    """
+        )
+        body = body.format(
+            translation_table="\n".join(translation_table),
+            name=self._name,
+            prototype=self._prototype,
+        )
+        prototype = "const char *{name}_str( {prototype} in );\n"
+        prototype = prototype.format(name=self._name, prototype=self._prototype)
         return body, prototype
 
 
-OUTPUT_C_TEMPLATE = '''\
+OUTPUT_C_TEMPLATE = """\
 /* Automatically generated by generate_ssl_debug_helpers.py. DO NOT EDIT. */
 
 #include "common.h"
@@ -252,9 +258,9 @@ OUTPUT_C_TEMPLATE = '''\
 #endif /* MBEDTLS_DEBUG_C */
 /* End of automatically generated file. */
 
-'''
+"""
 
-OUTPUT_H_TEMPLATE = '''\
+OUTPUT_H_TEMPLATE = """\
 /* Automatically generated by generate_ssl_debug_helpers.py. DO NOT EDIT. */
 #ifndef MBEDTLS_SSL_DEBUG_HELPERS_H
 #define MBEDTLS_SSL_DEBUG_HELPERS_H
@@ -274,15 +280,15 @@ OUTPUT_H_TEMPLATE = '''\
 
 /* End of automatically generated file. */
 
-'''
+"""
 
 
 def generate_ssl_debug_helpers(output_directory, mbedtls_root):
     """
-        Generate functions of debug helps
+    Generate functions of debug helps
     """
     mbedtls_root = os.path.abspath(mbedtls_root or build_tree.guess_mbedtls_root())
-    with open(os.path.join(mbedtls_root, 'include/mbedtls/ssl.h')) as f:
+    with open(os.path.join(mbedtls_root, "include/mbedtls/ssl.h")) as f:
         source_code = remove_c_comments(f.read())
 
     definitions = dict()
@@ -301,18 +307,22 @@ def generate_ssl_debug_helpers(output_directory, mbedtls_root):
     function_definitions = [str(v) for _, v in sorted(definitions.items())]
     function_prototypes = [str(v) for _, v in sorted(prototypes.items())]
     if output_directory == sys.stdout:
-        sys.stdout.write(OUTPUT_H_TEMPLATE.format(
-            functions='\n'.join(function_prototypes)))
-        sys.stdout.write(OUTPUT_C_TEMPLATE.format(
-            functions='\n'.join(function_definitions)))
+        sys.stdout.write(
+            OUTPUT_H_TEMPLATE.format(functions="\n".join(function_prototypes))
+        )
+        sys.stdout.write(
+            OUTPUT_C_TEMPLATE.format(functions="\n".join(function_definitions))
+        )
     else:
-        with open(os.path.join(output_directory, 'ssl_debug_helpers_generated.c'), 'w') as f:
-            f.write(OUTPUT_C_TEMPLATE.format(
-                functions='\n'.join(function_definitions)))
+        with open(
+            os.path.join(output_directory, "ssl_debug_helpers_generated.c"), "w"
+        ) as f:
+            f.write(OUTPUT_C_TEMPLATE.format(functions="\n".join(function_definitions)))
 
-        with open(os.path.join(output_directory, 'ssl_debug_helpers_generated.h'), 'w') as f:
-            f.write(OUTPUT_H_TEMPLATE.format(
-                functions='\n'.join(function_prototypes)))
+        with open(
+            os.path.join(output_directory, "ssl_debug_helpers_generated.h"), "w"
+        ) as f:
+            f.write(OUTPUT_H_TEMPLATE.format(functions="\n".join(function_prototypes)))
 
 
 def main():
@@ -320,10 +330,18 @@ def main():
     Command line entry
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mbedtls-root', nargs='?', default=None,
-                        help='root directory of mbedtls source code')
-    parser.add_argument('output_directory', nargs='?',
-                        default='library', help='source/header files location')
+    parser.add_argument(
+        "--mbedtls-root",
+        nargs="?",
+        default=None,
+        help="root directory of mbedtls source code",
+    )
+    parser.add_argument(
+        "output_directory",
+        nargs="?",
+        default="library",
+        help="source/header files location",
+    )
 
     args = parser.parse_args()
 
@@ -331,5 +349,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

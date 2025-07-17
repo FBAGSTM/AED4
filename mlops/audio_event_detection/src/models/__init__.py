@@ -7,7 +7,7 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 from .custom_model import get_model
-from .model_utils import add_head 
+from .model_utils import add_head
 from .yamnet import yamnet
 from .miniresnet import miniresnet
 from .miniresnetv2 import miniresnetv2

@@ -22,8 +22,8 @@ import sys
 # exit with 3 if --new is older than --old
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--old', help='Version currently in use')
-parser.add_argument('--new', help='New version to publish')
+parser.add_argument("--old", help="Version currently in use")
+parser.add_argument("--new", help="New version to publish")
 
 args = parser.parse_args()
 if args.old is None or args.new is None:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Install all the required Python packages, with the minimum Python version.
-"""
+"""Install all the required Python packages, with the minimum Python version."""
 
 # Copyright The Mbed TLS Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -28,8 +27,9 @@ import typing
 from typing import List, Optional
 from mbedtls_dev import typing_util
 
+
 def pylint_doesn_t_notice_that_certain_types_are_used_in_annotations(
-        _list: List[typing.Any],
+    _list: List[typing.Any],
 ) -> None:
     pass
 
@@ -38,13 +38,13 @@ class Requirements:
     """Collect and massage Python requirements."""
 
     def __init__(self) -> None:
-        self.requirements = [] #type: List[str]
+        self.requirements = []  # type: List[str]
 
     def adjust_requirement(self, req: str) -> str:
         """Adjust a requirement to the minimum specified version."""
         # allow inheritance #pylint: disable=no-self-use
         # If a requirement specifies a minimum version, impose that version.
-        req = re.sub(r'>=|~=', r'==', req)
+        req = re.sub(r">=|~=", r"==", req)
         return req
 
     def add_file(self, filename: str) -> None:
@@ -58,13 +58,12 @@ class Requirements:
         """
         for line in open(filename):
             line = line.strip()
-            line = re.sub(r'(\A|\s+)#.*', r'', line)
+            line = re.sub(r"(\A|\s+)#.*", r"", line)
             if not line:
                 continue
-            m = re.match(r'-r\s+', line)
+            m = re.match(r"-r\s+", line)
             if m:
-                nested_file = os.path.join(os.path.dirname(filename),
-                                           line[m.end(0):])
+                nested_file = os.path.join(os.path.dirname(filename), line[m.end(0) :])
                 self.add_file(nested_file)
                 continue
             self.requirements.append(self.adjust_requirement(line))
@@ -72,12 +71,12 @@ class Requirements:
     def write(self, out: typing_util.Writable) -> None:
         """List the gathered requirements."""
         for req in self.requirements:
-            out.write(req + '\n')
+            out.write(req + "\n")
 
     def install(
-            self,
-            pip_general_options: Optional[List[str]] = None,
-            pip_install_options: Optional[List[str]] = None,
+        self,
+        pip_general_options: Optional[List[str]] = None,
+        pip_install_options: Optional[List[str]] = None,
     ) -> None:
         """Call pip to install the requirements."""
         if pip_general_options is None:
@@ -91,48 +90,72 @@ class Requirements:
             # than NamedTemporaryFile because with a NamedTemporaryFile on
             # Windows, the subprocess can't open the file because this process
             # has an exclusive lock on it.
-            req_file_name = os.path.join(temp_dir, 'requirements.txt')
-            with open(req_file_name, 'w') as req_file:
+            req_file_name = os.path.join(temp_dir, "requirements.txt")
+            with open(req_file_name, "w") as req_file:
                 self.write(req_file)
-            subprocess.check_call([sys.executable, '-m', 'pip'] +
-                                  pip_general_options +
-                                  ['install'] + pip_install_options +
-                                  ['-r', req_file_name])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip"]
+                + pip_general_options
+                + ["install"]
+                + pip_install_options
+                + ["-r", req_file_name]
+            )
 
-DEFAULT_REQUIREMENTS_FILE = 'ci.requirements.txt'
+
+DEFAULT_REQUIREMENTS_FILE = "ci.requirements.txt"
+
 
 def main() -> None:
     """Command line entry point."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--no-act', '-n',
-                        action='store_true',
-                        help="Don't act, just print what will be done")
-    parser.add_argument('--pip-install-option',
-                        action='append', dest='pip_install_options',
-                        help="Pass this option to pip install")
-    parser.add_argument('--pip-option',
-                        action='append', dest='pip_general_options',
-                        help="Pass this general option to pip")
-    parser.add_argument('--user',
-                        action='append_const', dest='pip_install_options',
-                        const='--user',
-                        help="Install to the Python user install directory"
-                             " (short for --pip-install-option --user)")
-    parser.add_argument('files', nargs='*', metavar='FILE',
-                        help="Requirement files"
-                             " (default: {} in the script's directory)" \
-                             .format(DEFAULT_REQUIREMENTS_FILE))
+    parser.add_argument(
+        "--no-act",
+        "-n",
+        action="store_true",
+        help="Don't act, just print what will be done",
+    )
+    parser.add_argument(
+        "--pip-install-option",
+        action="append",
+        dest="pip_install_options",
+        help="Pass this option to pip install",
+    )
+    parser.add_argument(
+        "--pip-option",
+        action="append",
+        dest="pip_general_options",
+        help="Pass this general option to pip",
+    )
+    parser.add_argument(
+        "--user",
+        action="append_const",
+        dest="pip_install_options",
+        const="--user",
+        help="Install to the Python user install directory"
+        " (short for --pip-install-option --user)",
+    )
+    parser.add_argument(
+        "files",
+        nargs="*",
+        metavar="FILE",
+        help="Requirement files"
+        " (default: {} in the script's directory)".format(DEFAULT_REQUIREMENTS_FILE),
+    )
     options = parser.parse_args()
     if not options.files:
-        options.files = [os.path.join(os.path.dirname(__file__),
-                                      DEFAULT_REQUIREMENTS_FILE)]
+        options.files = [
+            os.path.join(os.path.dirname(__file__), DEFAULT_REQUIREMENTS_FILE)
+        ]
     reqs = Requirements()
     for filename in options.files:
         reqs.add_file(filename)
     reqs.write(sys.stdout)
     if not options.no_act:
-        reqs.install(pip_general_options=options.pip_general_options,
-                     pip_install_options=options.pip_install_options)
+        reqs.install(
+            pip_general_options=options.pip_general_options,
+            pip_install_options=options.pip_install_options,
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

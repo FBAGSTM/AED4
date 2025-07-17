@@ -32,16 +32,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Intel HEX file format bin2hex convertor utility.'''
+"""Intel HEX file format bin2hex convertor utility."""
 
-VERSION = '2.3.0'
+VERSION = "2.3.0"
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import getopt
     import os
     import sys
 
-    usage = '''Bin2Hex convertor utility.
+    usage = """Bin2Hex convertor utility.
 Usage:
     python bin2hex.py [options] INFILE [OUTFILE]
 
@@ -56,13 +56,12 @@ Options:
     -h, --help              this help message.
     -v, --version           version info.
     --offset=N              offset for loading bin file (default: 0).
-'''
+"""
 
     offset = 0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv",
-                                  ["help", "version", "offset="])
+        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "version", "offset="])
 
         for o, a in opts:
             if o in ("-h", "--help"):
@@ -73,22 +72,24 @@ Options:
                 sys.exit(0)
             elif o in ("--offset"):
                 base = 10
-                if a[:2].lower() == '0x':
+                if a[:2].lower() == "0x":
                     base = 16
                 try:
                     offset = int(a, base)
                 except:
-                    raise getopt.GetoptError('Bad offset value')
+                    raise getopt.GetoptError("Bad offset value")
 
         if not args:
-            raise getopt.GetoptError('Input file is not specified')
+            raise getopt.GetoptError("Input file is not specified")
 
         if len(args) > 2:
-            raise getopt.GetoptError('Too many arguments')
+            raise getopt.GetoptError("Too many arguments")
 
     except getopt.GetoptError:
-        msg = sys.exc_info()[1]     # current exception
-        txt = 'ERROR: '+str(msg)    # that's required to get not-so-dumb result from 2to3 tool
+        msg = sys.exc_info()[1]  # current exception
+        txt = "ERROR: " + str(
+            msg
+        )  # that's required to get not-so-dumb result from 2to3 tool
         print(txt)
         print(usage)
         sys.exit(2)
@@ -96,11 +97,13 @@ Options:
     from intelhex import compat
 
     fin = args[0]
-    if fin == '-':
+    if fin == "-":
         # read from stdin
         fin = compat.get_binary_stdin()
     elif not os.path.isfile(fin):
-        txt = "ERROR: File not found: %s" % fin   # that's required to get not-so-dumb result from 2to3 tool
+        txt = (
+            "ERROR: File not found: %s" % fin
+        )  # that's required to get not-so-dumb result from 2to3 tool
         print(txt)
         sys.exit(1)
 
@@ -108,7 +111,8 @@ Options:
         fout = args[1]
     else:
         # write to stdout
-        fout = sys.stdout   # compat.get_binary_stdout()
+        fout = sys.stdout  # compat.get_binary_stdout()
 
     from intelhex import bin2hex
+
     sys.exit(bin2hex(fin, fout, offset))

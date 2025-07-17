@@ -1,4 +1,4 @@
-#****************************************************************
+# ****************************************************************
 #
 # Copyright (c) 2001-2019, Arm Limited and Contributors. All rights reserved.
 #
@@ -27,18 +27,20 @@ def tempReverseBytesInBytesArray(array, size):
 
     reversedArray = c_ubyte * size
     revArray = reversedArray()
-    for i in range(size//4):
+    for i in range(size // 4):
         # reverse each word
         for j in range(4):
-            revArray[4*i + j] = array[4*i + 3 - j]
+            revArray[4 * i + j] = array[4 * i + 3 - j]
     return revArray
+
+
 # End of ReverseBytesInString
 
 
 # This class represent a record info structure. It includes the SW Comp address,
 # the Size of the record, the place holder and the HASH result
 class CertRecordInfo:
-    FlashAddr = 0xabc
+    FlashAddr = 0xABC
     MemLoadAddr = 0x100
     MemLoadAddrList = list()
     LenInWords = int(0)
@@ -47,23 +49,46 @@ class CertRecordInfo:
     SwHASHResult = ""
 
     # Constructor
-    def __init__(self, log, loadVerifyScheme, RecFlashAddr, RecMemAddr, RecMemAddrList, RecMaxInBytes, RecIsCeUsed, RecLenInBytes, RecHash):
+    def __init__(
+        self,
+        log,
+        loadVerifyScheme,
+        RecFlashAddr,
+        RecMemAddr,
+        RecMemAddrList,
+        RecMaxInBytes,
+        RecIsCeUsed,
+        RecLenInBytes,
+        RecHash,
+    ):
 
         # load address can be 0xffffffff only in case of "verify only in flash" mode
-        if (loadVerifyScheme == VERIFY_IMAGE_IN_FLASH and RecMemAddr != MEM_ADDRESS_UNLOAD_FLAG) :
+        if (
+            loadVerifyScheme == VERIFY_IMAGE_IN_FLASH
+            and RecMemAddr != MEM_ADDRESS_UNLOAD_FLAG
+        ):
             print_and_log(log, "Illegal load address defined - exiting\n")
             sys.exit()
 
-        if (loadVerifyScheme != VERIFY_IMAGE_IN_FLASH and RecMemAddr == MEM_ADDRESS_UNLOAD_FLAG) :
+        if (
+            loadVerifyScheme != VERIFY_IMAGE_IN_FLASH
+            and RecMemAddr == MEM_ADDRESS_UNLOAD_FLAG
+        ):
             print_and_log(log, "Illegal load address defined - exiting\n")
             sys.exit()
 
         # flash storage address can be 0xffffffff only in case of "verify only in mem" mode
-        if (loadVerifyScheme == VERIFY_IMAGE_IN_MEM and RecFlashAddr != MEM_ADDRESS_UNLOAD_FLAG) :
+        if (
+            loadVerifyScheme == VERIFY_IMAGE_IN_MEM
+            and RecFlashAddr != MEM_ADDRESS_UNLOAD_FLAG
+        ):
             print_and_log(log, "Illegal flash address defined - exiting\n")
             sys.exit()
 
-        if (loadVerifyScheme != VERIFY_IMAGE_IN_MEM and RecFlashAddr == MEM_ADDRESS_UNLOAD_FLAG) :
+        if (
+            loadVerifyScheme != VERIFY_IMAGE_IN_MEM
+            and RecFlashAddr == MEM_ADDRESS_UNLOAD_FLAG
+        ):
             print_and_log(log, "Illegal flash address defined - exiting\n")
             sys.exit()
 
@@ -85,11 +110,11 @@ class CertRecordInfo:
 
         DataBinStr = self.SwHASHResult
 
-        DataBinStr1 = struct.pack('<I', self.MemLoadAddr)
+        DataBinStr1 = struct.pack("<I", self.MemLoadAddr)
 
-        DataBinStr2 = struct.pack('<I', self.MaxLenInWords)
+        DataBinStr2 = struct.pack("<I", self.MaxLenInWords)
 
-        DataBinStr3 = struct.pack('<I', self.AesCodeEncUsed)
+        DataBinStr3 = struct.pack("<I", self.AesCodeEncUsed)
 
         DataBinStr = DataBinStr + DataBinStr1 + DataBinStr2 + DataBinStr3
         return byte2string(DataBinStr)
@@ -100,9 +125,9 @@ class CertRecordInfo:
         DataBinStr = str()
         DataBinStr1 = str()
 
-        DataBinStr = struct.pack('<I', self.FlashAddr)
+        DataBinStr = struct.pack("<I", self.FlashAddr)
 
-        DataBinStr1 = struct.pack('<I', self.LenInWords)
+        DataBinStr1 = struct.pack("<I", self.LenInWords)
 
         DataBinStr = DataBinStr + DataBinStr1
         return byte2string(DataBinStr)
@@ -110,6 +135,7 @@ class CertRecordInfo:
     # Return the load address
     def GetLoadAddress(self):
         return self.MemLoadAddr
+
 
 # End of CertRecordInfo
 
@@ -146,7 +172,7 @@ class CodeEncryptionData:
 
         except IOError as Error1:
             (errno, strerror) = Error1.args
-            print("Error in opening file - %s" %FileName)
+            print("Error in opening file - %s" % FileName)
             sys.exit()
         return keyIntArray
 
@@ -160,19 +186,21 @@ class CodeEncryptionData:
 
             i = 0
             for char in self.nonceStrBin:
-                IVIntArray[i] = struct.unpack("B",char)[0]
+                IVIntArray[i] = struct.unpack("B", char)[0]
                 i = i + 1
 
             # The IV is composed of - nonce (8 bytes) + load address (4 bytes)
             # first need to verify that the list size is as expected
-            if len(loadAddressList) < NUM_OF_BYTES_IN_ADDRESS: # need to fill zeroes before
-                    fillZeroes = NUM_OF_BYTES_IN_ADDRESS - len(loadAddressList)
+            if (
+                len(loadAddressList) < NUM_OF_BYTES_IN_ADDRESS
+            ):  # need to fill zeroes before
+                fillZeroes = NUM_OF_BYTES_IN_ADDRESS - len(loadAddressList)
 
             for j in range(fillZeroes):
                 IVIntArray[i] = int("0")
                 i = i + 1
-             # copy each byte as int to the array
-            for j in range(int(NUM_OF_BYTES_IN_ADDRESS)-fillZeroes):
+            # copy each byte as int to the array
+            for j in range(int(NUM_OF_BYTES_IN_ADDRESS) - fillZeroes):
                 IVIntArray[i] = int(loadAddressList[j], 16)
                 i = i + 1
 
@@ -189,24 +217,36 @@ class CodeEncryptionData:
             image_size = c_uint()
             OutputDataIntArray = create_string_buffer(SHA_256_HASH_SIZE_IN_BYTES)
 
-            result = SBU_Crypto.SBU_AES_CTR_EncryptFile(str.encode(inputFileName), str.encode(newFileName), self.keyIntArray, AES_DECRYPT_KEY_SIZE_IN_BYTES,self.IVIntArray, OutputDataIntArray, byref(image_size), self.cryptoType)
+            result = SBU_Crypto.SBU_AES_CTR_EncryptFile(
+                str.encode(inputFileName),
+                str.encode(newFileName),
+                self.keyIntArray,
+                AES_DECRYPT_KEY_SIZE_IN_BYTES,
+                self.IVIntArray,
+                OutputDataIntArray,
+                byref(image_size),
+                self.cryptoType,
+            )
 
             if result != 0:
                 raise NameError
 
         except NameError:
-            print("\n SBU_Crypto.SBU_AES_CTR_EncryptFile returned an error !!" + str(result))
+            print(
+                "\n SBU_Crypto.SBU_AES_CTR_EncryptFile returned an error !!"
+                + str(result)
+            )
             sys.exit()
 
-        return dict(Hash = OutputDataIntArray.raw, SizeOfRec = image_size.value)
+        return dict(Hash=OutputDataIntArray.raw, SizeOfRec=image_size.value)
 
 
 # This class is used to keep the random nonce
 class KeyNonce:
-    #The function creates a random nonce (2 words)
+    # The function creates a random nonce (2 words)
     def __init__(self, codeEncId, DLLHandle):
         try:
-            #generate 8 bytes of random data, in binary format
+            # generate 8 bytes of random data, in binary format
             if codeEncId != USE_AES_CE_ID_NONE:
                 self.randStr = create_string_buffer(8)
                 result = DLLHandle.SBU_RAND_Bytes(8, self.randStr)
@@ -215,8 +255,7 @@ class KeyNonce:
             else:
                 self.randStr = create_string_buffer(8)
                 for i in range(8):
-                        self.randStr[i] = 0
-
+                    self.randStr[i] = 0
 
         except NameError:
             print("\n CreateNonce failed, failed to create random number! ")
@@ -231,8 +270,10 @@ class KeyNonce:
         str1 = byte2stringBytesArray(self.randStr)
         return str1
 
-#End of CreateNonce
+
+# End of CreateNonce
 ########### Data Records analyzer functions ###########
+
 
 # The ImageFileAnalyzer function analyzes the files list file and return a list of data records objects.
 # The function does the following steps:
@@ -245,26 +286,35 @@ class KeyNonce:
 #               Max image size in Bytes
 # Step 3 - For each SW image (SW component) calculate its HASH and add to dictionary along with its size
 # Step 4 - Create a record object and insert the data into it
-def ImageFileAnalyzer(logFile, FileName, loadVerifyScheme, codeEncId, SBU_DLLHandle, keyFileName, nonce, cryptoType):
+def ImageFileAnalyzer(
+    logFile,
+    FileName,
+    loadVerifyScheme,
+    codeEncId,
+    SBU_DLLHandle,
+    keyFileName,
+    nonce,
+    cryptoType,
+):
 
     DataRecsList = list()
 
     # SB does not support encrypted images in case of "loading only" and "verify only in flash" modes
-    if (loadVerifyScheme == VERIFY_IMAGE_IN_FLASH and codeEncId != USE_AES_CE_ID_NONE) :
+    if loadVerifyScheme == VERIFY_IMAGE_IN_FLASH and codeEncId != USE_AES_CE_ID_NONE:
         print_and_log(logFile, "Verify encrypted image in Flash is illegal - exiting\n")
         sys.exit()
 
-    if (loadVerifyScheme == LOADING_ONLY_IMAGE and codeEncId != USE_AES_CE_ID_NONE) :
+    if loadVerifyScheme == LOADING_ONLY_IMAGE and codeEncId != USE_AES_CE_ID_NONE:
         print_and_log(logFile, "Loading only encrypted image is illegal - exiting\n")
         sys.exit()
 
     # Open the file (that contain the files list)
     try:
-        FileObj = open(FileName , "r")
+        FileObj = open(FileName, "r")
         LinesDictList = list()
         FileLines = FileObj.readlines()
         # If the file is empty the data record list will be returned empty
-        if len(FileLines) == 0 :
+        if len(FileLines) == 0:
             print_and_log(logFile, "illegal number of images = 0 !")
             sys.exit(1)
         # Get each line in the file and insert it into a list of dictionaries
@@ -272,23 +322,48 @@ def ImageFileAnalyzer(logFile, FileName, loadVerifyScheme, codeEncId, SBU_DLLHan
         # of the image
         for lineObj in FileLines:
             # if it is comment ignore
-            if re.match(r'^#', lineObj):
+            if re.match(r"^#", lineObj):
                 continue
             LinesDictList.append(LineAnalyzer(logFile, lineObj))
         # For each SW image (SW component) calculate its HASH and add to dictionary (hash and size)
         for ListObj in LinesDictList:
-            ListObj.update(HashResOnSWComponent(logFile, ListObj.get('ImgName'), ListObj.get('isAesCodeEncUsed'), codeEncId, SBU_DLLHandle,ListObj.get('MemLoadAddrList'), keyFileName, nonce, cryptoType))
+            ListObj.update(
+                HashResOnSWComponent(
+                    logFile,
+                    ListObj.get("ImgName"),
+                    ListObj.get("isAesCodeEncUsed"),
+                    codeEncId,
+                    SBU_DLLHandle,
+                    ListObj.get("MemLoadAddrList"),
+                    keyFileName,
+                    nonce,
+                    cryptoType,
+                )
+            )
             # Create a record object and insert the data into it
-            CertRecordInfoObj = CertRecordInfo(logFile, loadVerifyScheme, ListObj.get('FlashStoreAddr'), ListObj.get('MemLoadAddr'), ListObj.get('MemLoadAddrList'), ListObj.get('ImgMaxSizeInBytes'), ListObj.get('isAesCodeEncUsed'), ListObj.get('SizeOfRec'),ListObj.get('Hash'))
+            CertRecordInfoObj = CertRecordInfo(
+                logFile,
+                loadVerifyScheme,
+                ListObj.get("FlashStoreAddr"),
+                ListObj.get("MemLoadAddr"),
+                ListObj.get("MemLoadAddrList"),
+                ListObj.get("ImgMaxSizeInBytes"),
+                ListObj.get("isAesCodeEncUsed"),
+                ListObj.get("SizeOfRec"),
+                ListObj.get("Hash"),
+            )
             DataRecsList.append(CertRecordInfoObj)
 
     except IOError as Error1:
         (errno, strerror) = Error1.args
-        print_and_log(logFile, "\n Error in openning file - %s" %FileName)
+        print_and_log(logFile, "\n Error in openning file - %s" % FileName)
         sys.exit(1)
 
     return DataRecsList
+
+
 # End of ImageFileAnalyzer
+
 
 # The LineAnalyzer function takes each line in the files list file and separate it
 # Each line is expected to be in the following structure:
@@ -298,34 +373,58 @@ def ImageFileAnalyzer(logFile, FileName, loadVerifyScheme, codeEncId, SBU_DLLHan
 def LineAnalyzer(logFile, FileLine):
     try:
         LineList = FileLine.split(" ")
-        MemLoadAddr = int(LineList[1],16)
+        MemLoadAddr = int(LineList[1], 16)
         if MemLoadAddr == 0:
-            print_and_log(logFile, "\n Illegal Address - 0 is not allowed as load address !!")
+            print_and_log(
+                logFile, "\n Illegal Address - 0 is not allowed as load address !!"
+            )
             sys.exit(1)
         MemLoadAddrList = createAddrList(LineList[1][2:])
-        FlashStoreAddr = int(LineList[2],16)
-        ImgMaxSizeInBytes = int(LineList[3],16)
-        isAesCodeEncUsed = int(LineList[4],16)
+        FlashStoreAddr = int(LineList[2], 16)
+        ImgMaxSizeInBytes = int(LineList[3], 16)
+        isAesCodeEncUsed = int(LineList[4], 16)
 
     except NameError:
         print_and_log(logFile, "\n Illegal Address - not word alligned !!")
         sys.exit(1)
 
-    return dict(ImgName = LineList[0], MemLoadAddr = MemLoadAddr, MemLoadAddrList = MemLoadAddrList, FlashStoreAddr = FlashStoreAddr, ImgMaxSizeInBytes = ImgMaxSizeInBytes, isAesCodeEncUsed = isAesCodeEncUsed)
+    return dict(
+        ImgName=LineList[0],
+        MemLoadAddr=MemLoadAddr,
+        MemLoadAddrList=MemLoadAddrList,
+        FlashStoreAddr=FlashStoreAddr,
+        ImgMaxSizeInBytes=ImgMaxSizeInBytes,
+        isAesCodeEncUsed=isAesCodeEncUsed,
+    )
+
+
 # End of LineAnalyzer
+
 
 # The HashResOnSWComponent decides on which HASH algorithm should be used and call the correct function
 # Currently HASH SHA256 output & SHA 256 output is trucated to 128 bits output are supported
-def HashResOnSWComponent(logFile, FileName, isAesCodeEncUsed, codeEncId, SBU_DLLHandle, memoryLoadAddr, keyFileName, nonce, cryptoType):
+def HashResOnSWComponent(
+    logFile,
+    FileName,
+    isAesCodeEncUsed,
+    codeEncId,
+    SBU_DLLHandle,
+    memoryLoadAddr,
+    keyFileName,
+    nonce,
+    cryptoType,
+):
     try:
-        if isAesCodeEncUsed == 1 :
-             # do Aes and Hash
-            if codeEncId != USE_AES_CE_ID_NONE :
-                codeEncObj = CodeEncryptionData(logFile, keyFileName, memoryLoadAddr, nonce, cryptoType)
+        if isAesCodeEncUsed == 1:
+            # do Aes and Hash
+            if codeEncId != USE_AES_CE_ID_NONE:
+                codeEncObj = CodeEncryptionData(
+                    logFile, keyFileName, memoryLoadAddr, nonce, cryptoType
+                )
                 return codeEncObj.AESEncryptDataAndHash(FileName, SBU_DLLHandle)
             else:
-               print_and_log(logFile, "ERROR: No AES key was selected!")
-               sys.exit(1)
+                print_and_log(logFile, "ERROR: No AES key was selected!")
+                sys.exit(1)
         else:
             # do only Hash
             return HashResOnSWComponent_SHA256(logFile, FileName, SBU_DLLHandle)
@@ -334,7 +433,10 @@ def HashResOnSWComponent(logFile, FileName, isAesCodeEncUsed, codeEncId, SBU_DLL
         sys.exit(1)
 
     return
+
+
 # End of HashResOnSWComponent
+
 
 # The HashResOnSWComponent_SHA256 function reads the image file (SW component) and calculate HASH on it
 def HashResOnSWComponent_SHA256(logFile, FileName, SBU_Crypto):
@@ -342,7 +444,16 @@ def HashResOnSWComponent_SHA256(logFile, FileName, SBU_Crypto):
         image_size = c_uint()
         OutputDataIntArray = create_string_buffer(SHA_256_HASH_SIZE_IN_BYTES)
 
-        result = SBU_Crypto.SBU_AES_CTR_EncryptFile(str.encode(FileName), None, None, 0 ,None, OutputDataIntArray, byref(image_size), 0)
+        result = SBU_Crypto.SBU_AES_CTR_EncryptFile(
+            str.encode(FileName),
+            None,
+            None,
+            0,
+            None,
+            OutputDataIntArray,
+            byref(image_size),
+            0,
+        )
         if result != 0:
             print_and_log(logFile, "Error in Hash!")
             sys.exit(1)
@@ -351,19 +462,20 @@ def HashResOnSWComponent_SHA256(logFile, FileName, SBU_Crypto):
         print_and_log(logFile, "Error in Hash !")
         sys.exit(1)
 
-    return dict(Hash = OutputDataIntArray.raw, SizeOfRec = image_size.value)
+    return dict(Hash=OutputDataIntArray.raw, SizeOfRec=image_size.value)
 
-def createAddrList (dataStr):
+
+def createAddrList(dataStr):
     dataList = list()
 
-    if len(dataStr)%2 == 1: #miss a zero at the beginning
-        newStr = '0'+dataStr
+    if len(dataStr) % 2 == 1:  # miss a zero at the beginning
+        newStr = "0" + dataStr
     else:
         newStr = dataStr
 
-    for i in range(int(len(newStr)/2)):
-        dataList.append(newStr[i*2:i*2+2])
+    for i in range(int(len(newStr) / 2)):
+        dataList.append(newStr[i * 2 : i * 2 + 2])
     return dataList
 
-########### Data Records analyzer functions End ###########
 
+########### Data Records analyzer functions End ###########

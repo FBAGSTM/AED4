@@ -12,16 +12,14 @@ setuptools.setup(
     license="Apache Software License",
     url="http://github.com/mcu-tools/mcuboot",
     packages=setuptools.find_packages(),
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     install_requires=[
-        'cryptography>=2.4.2',
-        'intelhex>=2.2.1',
-        'click',
-        'cbor2',
+        "cryptography>=2.4.2",
+        "intelhex>=2.2.1",
+        "click",
+        "cbor2",
     ],
-    entry_points={
-        "console_scripts": ["imgtool=imgtool.main:imgtool"]
-    },
+    entry_points={"console_scripts": ["imgtool=imgtool.main:imgtool"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",

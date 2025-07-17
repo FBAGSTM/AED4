@@ -25,16 +25,16 @@ def mfcc_col(buff_test):
 
     assert buff_test.shape == (window,)
 
-    hann_asym_f32 = hann(window, sym=False).astype('float32')
+    hann_asym_f32 = hann(window, sym=False).astype("float32")
     assert hann_asym_f32.shape == (window,), hann_asym_f32.shape
 
     buff_hann = buff_test * hann_asym_f32
     assert buff_hann.shape == (window,), buff_hann.shape
 
-    fft = np.fft.fft(buff_hann, window)[:half_window + 1]
+    fft = np.fft.fft(buff_hann, window)[: half_window + 1]
     assert fft.shape == (half_window + 1,), fft.shape
 
-    ps = np.abs(fft)**2
+    ps = np.abs(fft) ** 2
     assert ps.shape == (half_window + 1,)
 
     mel = librosa.filters.mel(sr, window, n_mels)
@@ -49,7 +49,7 @@ def mfcc_col(buff_test):
     dct_out = dct(logamplitude, type=3)
     assert dct_out.shape == (n_mels,)
 
-    return(dct_out[1:(n_coeff + 1)])
+    return dct_out[1 : (n_coeff + 1)]
 
 
 # buffer_bus_01 is made of first 2048 samples of "bus.wav" file
@@ -59,4 +59,4 @@ buffer_01 = ys[0:2048]
 
 mfcc_col = mfcc_col(buffer_01)
 
-print('mfcc = ', mfcc_col[:])
+print("mfcc = ", mfcc_col[:])

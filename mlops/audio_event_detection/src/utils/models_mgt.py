@@ -8,33 +8,36 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 import ssl
-
 ssl._create_default_https_context = ssl._create_unverified_context
 
-import sys
-import os
-from typing import Tuple, Dict, Optional, List
 import tensorflow as tf
-from onnx import ModelProto
-from pathlib import Path
-from omegaconf import OmegaConf, DictConfig, open_dict
+from omegaconf import DictConfig
 
 from common.utils import check_model_support, check_attributes
 from src.models import custom_model, yamnet, miniresnet, miniresnetv2
 from src.data_augmentation import SpecAugment, VolumeAugment
 
 
+AED_CUSTOM_OBJECTS = {
+    "SpecAugment": SpecAugment,
+    "VolumeAugment": VolumeAugment,
+}
 
-AED_CUSTOM_OBJECTS={'SpecAugment': SpecAugment,
-                    'VolumeAugment': VolumeAugment,
-                   }
 
-def get_model(cfg: DictConfig = None, num_classes: int = None, dropout: float = None,
-              fine_tune: bool = None, use_garbage_class: bool = None,
-              multi_label: bool = None, pretrained_weights: bool = None,
-              kernel_regularizer=None, activity_regularizer=None,
-              patch_length: int = None, n_mels: int = None,
-              section: str = None) -> tf.keras.Model:
+def get_model(
+    cfg: DictConfig = None,
+    num_classes: int = None,
+    dropout: float = None,
+    fine_tune: bool = None,
+    use_garbage_class: bool = None,
+    multi_label: bool = None,
+    pretrained_weights: bool = None,
+    kernel_regularizer=None,
+    activity_regularizer=None,
+    patch_length: int = None,
+    n_mels: int = None,
+    section: str = None,
+) -> tf.keras.Model:
     """
     Returns a Keras model object based on the specified configuration and parameters.
 
@@ -46,7 +49,7 @@ def get_model(cfg: DictConfig = None, num_classes: int = None, dropout: float = 
             If pretrained_weights is False, does nothing.
         use_garbage_class: bool, if True an additional neuron is added to the classification head
             of the model to accomodate for the "garbage" class.
-        multi_label : bool, set to True if output is multi-label. 
+        multi_label : bool, set to True if output is multi-label.
             If True, activation function is a sigmoïd,
             if False it is a softmax instead.
         pretrained_weights : bool, if True use ST-provided pretrained weights
@@ -64,80 +67,112 @@ def get_model(cfg: DictConfig = None, num_classes: int = None, dropout: float = 
     """
 
     # Define the supported models and their versions
-    supported_models = {
-        'yamnet': None,
-        'miniresnet': ['v1', 'v2'],
-        'custom': None
-    }
+    supported_models = {"yamnet": None, "miniresnet": ["v1", "v2"], "custom": None}
 
     message = "\nPlease check the 'training.model' section of your configuration file."
 
     # Check if the specified model is supported
     model_name = cfg.name
     model_version = cfg.version
-    check_model_support(model_name, version=model_version, supported_models=supported_models, message=message)
+    check_model_support(
+        model_name,
+        version=model_version,
+        supported_models=supported_models,
+        message=message,
+    )
 
     # Check if specified model allows using pretrained weights
 
-    models_with_pretrained_weights = ['yamnet', 'miniresnet']
+    models_with_pretrained_weights = ["yamnet", "miniresnet"]
     if model_name not in models_with_pretrained_weights and pretrained_weights:
         raise ValueError(f"No pretrained weights are available for model {model_name}")
     # If the model is yamnet
     if model_name == "yamnet":
-        check_attributes(cfg, expected=["name", "embedding_size", "input_shape", "pretrained_weights"], section=section)
-        model = yamnet.get_model(n_classes=num_classes,
-                embedding_size=cfg.embedding_size,
-                fine_tune=fine_tune,
-                use_garbage_class=use_garbage_class,
-                dropout=dropout,
-                multi_label=multi_label,
-                kernel_regularizer=kernel_regularizer,
-                activity_regularizer=activity_regularizer,
-                patch_length=patch_length,
-                n_mels=n_mels,
-                pretrained_weights=pretrained_weights
-                )
+        check_attributes(
+            cfg,
+            expected=["name", "embedding_size", "input_shape", "pretrained_weights"],
+            section=section,
+        )
+        model = yamnet.get_model(
+            n_classes=num_classes,
+            embedding_size=cfg.embedding_size,
+            fine_tune=fine_tune,
+            use_garbage_class=use_garbage_class,
+            dropout=dropout,
+            multi_label=multi_label,
+            kernel_regularizer=kernel_regularizer,
+            activity_regularizer=activity_regularizer,
+            patch_length=patch_length,
+            n_mels=n_mels,
+            pretrained_weights=pretrained_weights,
+        )
 
     # If the model is MiniResNet
     elif model_name == "miniresnet" and model_version == "v1":
-        check_attributes(cfg, expected=["name", "version", "n_stacks", "input_shape",
-                                        "pooling", "pretrained_weights"], section=section)
-        model = miniresnet.get_model(input_shape=cfg.input_shape,
-                n_stacks=cfg.n_stacks,
-                n_classes=num_classes,
-                pooling=cfg.pooling,
-                use_garbage_class=use_garbage_class,
-                multi_label=multi_label,
-                dropout=dropout,
-                pretrained_weights=pretrained_weights,
-                fine_tune=fine_tune,
-                kernel_regularizer=kernel_regularizer,
-                activity_regularizer=activity_regularizer)
+        check_attributes(
+            cfg,
+            expected=[
+                "name",
+                "version",
+                "n_stacks",
+                "input_shape",
+                "pooling",
+                "pretrained_weights",
+            ],
+            section=section,
+        )
+        model = miniresnet.get_model(
+            input_shape=cfg.input_shape,
+            n_stacks=cfg.n_stacks,
+            n_classes=num_classes,
+            pooling=cfg.pooling,
+            use_garbage_class=use_garbage_class,
+            multi_label=multi_label,
+            dropout=dropout,
+            pretrained_weights=pretrained_weights,
+            fine_tune=fine_tune,
+            kernel_regularizer=kernel_regularizer,
+            activity_regularizer=activity_regularizer,
+        )
 
     # If the model is MiniResNetv2
     elif model_name == "miniresnet" and model_version == "v2":
-        check_attributes(cfg, expected=["name", "version", "n_stacks", "input_shape",
-                                            "pooling", "pretrained_weights"], section=section)
-        model = miniresnetv2.get_model(input_shape=cfg.input_shape,
-                n_stacks=cfg.n_stacks,
-                n_classes=num_classes,
-                pooling=cfg.pooling,
-                use_garbage_class=use_garbage_class,
-                multi_label=multi_label,
-                dropout=dropout,
-                pretrained_weights=pretrained_weights,
-                fine_tune=fine_tune,
-                kernel_regularizer=kernel_regularizer,
-                activity_regularizer=activity_regularizer)
+        check_attributes(
+            cfg,
+            expected=[
+                "name",
+                "version",
+                "n_stacks",
+                "input_shape",
+                "pooling",
+                "pretrained_weights",
+            ],
+            section=section,
+        )
+        model = miniresnetv2.get_model(
+            input_shape=cfg.input_shape,
+            n_stacks=cfg.n_stacks,
+            n_classes=num_classes,
+            pooling=cfg.pooling,
+            use_garbage_class=use_garbage_class,
+            multi_label=multi_label,
+            dropout=dropout,
+            pretrained_weights=pretrained_weights,
+            fine_tune=fine_tune,
+            kernel_regularizer=kernel_regularizer,
+            activity_regularizer=activity_regularizer,
+        )
 
     # If the model is a custom model
     elif model_name == "custom":
-        model = custom_model.get_model(input_shape=cfg.input_shape, num_classes=num_classes, dropout=dropout)
+        model = custom_model.get_model(
+            input_shape=cfg.input_shape, num_classes=num_classes, dropout=dropout
+        )
 
     return model
 
 
-def get_loss(multi_label:bool) -> tf.keras.losses:
+def get_loss(multi_label: bool) -> tf.keras.losses:
     """
     Returns the appropriate loss function based on the number of classes in the dataset.
 
@@ -148,11 +183,12 @@ def get_loss(multi_label:bool) -> tf.keras.losses:
        loss:  The appropriate keras loss function based on the number of classes in the dataset.
     """
     if multi_label:
-        raise NotImplementedError("Multi-label classification not implemented yet, but will be in a future update.")
+        raise NotImplementedError(
+            "Multi-label classification not implemented yet, but will be in a future update."
+        )
         # Remove the error once it's implemented
         loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)
     else:
         loss = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
-        
+
     return loss
-    

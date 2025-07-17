@@ -152,16 +152,16 @@ benchmarking:
   board: B-U585I-IOT02A 
 
 deployment:
-  c_project_path: ../../stm32
+  c_project_path: /opt/ml/processing/input/code/audio_event_detection/stm32ai_application_code
   IDE: GCC
   verbosity: 1
   hardware_setup:
-    serie: STM32U5 # or  STM32N6
-    board: B-U585I-IOT02A # or  STM32N6570-DK
+    serie: STM32U5 # or STM32N6
+    board: B-U585I-IOT02A # or STM32N6570-DK
   unknown_class_threshold: 0.0
 
 mlflow:
-  uri: ./outputs/mlruns
+  uri: /opt/ml/model/mlruns
 
 hydra:
   run:

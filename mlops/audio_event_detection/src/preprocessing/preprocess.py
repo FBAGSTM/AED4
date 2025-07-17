@@ -8,16 +8,13 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 from omegaconf import DictConfig
-from tensorflow import keras
-import os
-from re import A
 import numpy as np
 import tensorflow as tf
-from typing import Tuple
 # from tensorflow.keras import layers # Don't think this one is needed
 from .data_loader import load_dataset
 
-def preprocess(cfg: DictConfig = None) -> tuple: # OK
+
+def preprocess(cfg: DictConfig = None) -> tuple:  # OK
     """
     Preprocesses the data based on the provided configuration.
 
@@ -46,7 +43,14 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
 
     # Check if we have a dataset-specific section
     if cfg.dataset_specific:
-        train_ds, val_ds, val_clip_labels, quantization_ds, test_ds, test_clip_labels = load_dataset(
+        (
+            train_ds,
+            val_ds,
+            val_clip_labels,
+            quantization_ds,
+            test_ds,
+            test_clip_labels,
+        ) = load_dataset(
             dataset_name=cfg.dataset.name,
             training_csv_path=cfg.dataset.training_csv_path,
             training_audio_path=cfg.dataset.training_audio_path,
@@ -64,8 +68,8 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
             overlap=cfg.feature_extraction.overlap,
             n_fft=cfg.feature_extraction.n_fft,
             spec_hop_length=cfg.feature_extraction.hop_length,
-            min_length=cfg.preprocessing.min_length, 
-            max_length=cfg.preprocessing.max_length, 
+            min_length=cfg.preprocessing.min_length,
+            max_length=cfg.preprocessing.max_length,
             top_db=cfg.preprocessing.top_db,
             frame_length=cfg.preprocessing.frame_length,
             hop_length=cfg.preprocessing.hop_length,
@@ -78,7 +82,7 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
             power=cfg.feature_extraction.power,
             fmin=cfg.feature_extraction.fmin,
             fmax=cfg.feature_extraction.fmax,
-            power_to_db_ref=np.max, # Might let the user choose this param later
+            power_to_db_ref=np.max,  # Might let the user choose this param later
             norm=cfg.feature_extraction.norm,
             htk=cfg.feature_extraction.htk,
             to_db=cfg.feature_extraction.to_db,
@@ -95,9 +99,16 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
             fsd50k_csv_folder=cfg.dataset_specific.fsd50k.csv_folder,
             fsd50k_audioset_ontology_path=cfg.dataset_specific.fsd50k.audioset_ontology_path,
             fsd50k_keep_only_monolabel=cfg.dataset_specific.fsd50k.only_keep_monolabel,
-            )
+        )
     else:
-        train_ds, val_ds, val_clip_labels, quantization_ds, test_ds, test_clip_labels = load_dataset(
+        (
+            train_ds,
+            val_ds,
+            val_clip_labels,
+            quantization_ds,
+            test_ds,
+            test_clip_labels,
+        ) = load_dataset(
             dataset_name=cfg.dataset.name,
             training_csv_path=cfg.dataset.training_csv_path,
             training_audio_path=cfg.dataset.training_audio_path,
@@ -115,8 +126,8 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
             overlap=cfg.feature_extraction.overlap,
             n_fft=cfg.feature_extraction.n_fft,
             spec_hop_length=cfg.feature_extraction.hop_length,
-            min_length=cfg.preprocessing.min_length, 
-            max_length=cfg.preprocessing.max_length, 
+            min_length=cfg.preprocessing.min_length,
+            max_length=cfg.preprocessing.max_length,
             top_db=cfg.preprocessing.top_db,
             frame_length=cfg.preprocessing.frame_length,
             hop_length=cfg.preprocessing.hop_length,
@@ -129,7 +140,7 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
             power=cfg.feature_extraction.power,
             fmin=cfg.feature_extraction.fmin,
             fmax=cfg.feature_extraction.fmax,
-            power_to_db_ref=np.max, # Might let the user choose this param later
+            power_to_db_ref=np.max,  # Might let the user choose this param later
             norm=cfg.feature_extraction.norm,
             htk=cfg.feature_extraction.htk,
             to_db=cfg.feature_extraction.to_db,
@@ -140,12 +151,13 @@ def preprocess(cfg: DictConfig = None) -> tuple: # OK
             batch_size=batch_size,
             to_cache=cfg.dataset.to_cache,
             shuffle=cfg.dataset.shuffle,
-            seed=cfg.dataset.seed
+            seed=cfg.dataset.seed,
         )
 
     return train_ds, val_ds, val_clip_labels, quantization_ds, test_ds, test_clip_labels
 
-def preprocess_input(patch: np.ndarray, input_details: dict) -> tf.Tensor: # OK
+
+def preprocess_input(patch: np.ndarray, input_details: dict) -> tf.Tensor:  # OK
     """
     Quantizes a patch according to input details.
 
@@ -156,25 +168,32 @@ def preprocess_input(patch: np.ndarray, input_details: dict) -> tf.Tensor: # OK
     Returns:
         Quantized patch as a TensorFlow tensor.
     """
-    if input_details['dtype'] in [np.uint8, np.int8]:
-        patch_processed = (patch / input_details['quantization'][0]) + input_details['quantization'][1]
-        patch_processed = np.clip(np.round(patch_processed), np.iinfo(input_details['dtype']).min,
-                                  np.iinfo(input_details['dtype']).max)
+    if input_details["dtype"] in [np.uint8, np.int8]:
+        patch_processed = (patch / input_details["quantization"][0]) + input_details[
+            "quantization"
+        ][1]
+        patch_processed = np.clip(
+            np.round(patch_processed),
+            np.iinfo(input_details["dtype"]).min,
+            np.iinfo(input_details["dtype"]).max,
+        )
     else:
         # I would use an actual warning here but they are silenced in the main scripts...
-        print("[WARNING] : Quantization dtype isn't one of 'int8', 'uint8'. \n \
-               Input patches have not been quantized, this may lead to wrong results.")
+        print(
+            "[WARNING] : Quantization dtype isn't one of 'int8', 'uint8'. \n \
+               Input patches have not been quantized, this may lead to wrong results."
+        )
         patch_processed = patch
-    patch_processed = tf.cast(patch_processed, dtype=input_details['dtype'])
+    patch_processed = tf.cast(patch_processed, dtype=input_details["dtype"])
     # Should not need this since we are batching
     # patch_processed = tf.expand_dims(patch_processed, 0)
 
     return patch_processed
 
 
-def postprocess_output(output: np.ndarray,
-                       multi_label: bool = None,
-                       multilabel_threshold: float = 0.5) -> np.ndarray: # OK
+def postprocess_output(
+    output: np.ndarray, multi_label: bool = None, multilabel_threshold: float = 0.5
+) -> np.ndarray:  # OK
     """
     Postprocesses the model output to obtain the predicted label.
 

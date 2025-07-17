@@ -22,11 +22,13 @@ try:
 except ImportError:
     from cbor import dumps
 
+
 class SwComponent(int, Enum):
     """
     Software component property IDs specified by
     Arm's PSA Attestation API 1.0 document.
     """
+
     TYPE = 1
     MEASUREMENT_VALUE = 2
     VERSION = 4
@@ -34,8 +36,9 @@ class SwComponent(int, Enum):
     MEASUREMENT_DESCRIPTION = 6
 
 
-def create_sw_component_data(sw_type, sw_version, sw_measurement_description,
-                             sw_measurement_value, sw_signer_id):
+def create_sw_component_data(
+    sw_type, sw_version, sw_measurement_description, sw_measurement_value, sw_signer_id
+):
 
     # List of software component properties (Key ID + value)
     properties = {

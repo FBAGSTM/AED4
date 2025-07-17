@@ -11,9 +11,9 @@ import sys
 from ecdsa import SigningKey, NIST256p
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     outfile = sys.argv[1]
 
     sk = SigningKey.generate(curve=NIST256p)
-    with open(outfile, 'wb') as wfh:
+    with open(outfile, "wb") as wfh:
         wfh.write(sk.to_pem())

@@ -6,7 +6,6 @@
 #
 
 
-
 # This file contains the general classes used in the code
 
 import configparser
@@ -25,21 +24,23 @@ class CertNPublicKey:
 
     # The method __len__ returns the size of pubkey N and Np (string size in bytes)
     def __len__(self):
-        return(PUBKEY_SIZE_BYTES + NP_SIZE_IN_BYTES)
+        return PUBKEY_SIZE_BYTES + NP_SIZE_IN_BYTES
 
     # This method returns a binary string of the N string and Np string (N is set as big endian
-    # Np is set as little endian)   
+    # Np is set as little endian)
     def VarsToBinString(self):
         DataBinStr = str()
         PubKey = self.PubKey
 
-        for i in range(PUBKEY_SIZE_BYTES + NP_SIZE_IN_BYTES): 
+        for i in range(PUBKEY_SIZE_BYTES + NP_SIZE_IN_BYTES):
             byte = PubKey[i]
             DataBinStr = DataBinStr + byte2string(byte)
 
         return DataBinStr
 
+
 # End of CertNPublicKey
+
 
 # This class holds the RSA signature
 class CertRSASignature:
@@ -55,8 +56,8 @@ class CertRSASignature:
     # This method returns the binary signature
     def VarsToBinString(self):
         DataBinStr = self.SignatureStr
-     
+
         return byte2string(DataBinStr)
 
-# End of CertRSASignature
 
+# End of CertRSASignature

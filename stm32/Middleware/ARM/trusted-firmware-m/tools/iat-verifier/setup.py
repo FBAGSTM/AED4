@@ -8,22 +8,22 @@
 from setuptools import setup
 
 setup(
-    name='iatverifier',
-    version='0.1',
+    name="iatverifier",
+    version="0.1",
     packages=[
-        'iatverifier',
+        "iatverifier",
     ],
     scripts=[
-        'scripts/check_iat',
-        'scripts/compile_token',
-        'scripts/decompile_token',
+        "scripts/check_iat",
+        "scripts/compile_token",
+        "scripts/decompile_token",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     install_requires=[
-        'cbor2',
-        'cryptography',
-        'ecdsa',
-        'pycose>=0.1.2',
-        'pyyaml',
+        "cbor2",
+        "cryptography",
+        "ecdsa",
+        "pycose>=0.1.2",
+        "pyyaml",
     ],
 )

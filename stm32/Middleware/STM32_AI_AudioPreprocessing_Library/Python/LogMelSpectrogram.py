@@ -25,7 +25,7 @@ def create_col(y):
     assert y.shape == (1024,)
 
     # Create time-series window
-    fft_window = librosa.filters.get_window('hann', N_FFT, fftbins=True)
+    fft_window = librosa.filters.get_window("hann", N_FFT, fftbins=True)
     assert fft_window.shape == (1024,), fft_window.shape
 
     # Hann window
@@ -37,7 +37,7 @@ def create_col(y):
     assert fft_out.shape == (513,), fft_out.shape
 
     # Power spectrum
-    S_pwr = np.abs(fft_out)**2
+    S_pwr = np.abs(fft_out) ** 2
 
     assert S_pwr.shape == (513,)
 
@@ -56,7 +56,7 @@ def create_col(y):
 def feature_extraction(y):
     assert y.shape == (1024, 32)
 
-    S_mel = np.empty((30, 32), dtype=np.float32, order='C')
+    S_mel = np.empty((30, 32), dtype=np.float32, order="C")
     for col_index in range(0, 32):
         S_mel[:, col_index] = create_col(y[:, col_index])
 
@@ -69,11 +69,11 @@ def feature_extraction(y):
     return S_log_mel
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     wav_filename = sys.argv[1]
     if len(sys.argv) < 1:
-        print('Filename not specified')
+        print("Filename not specified")
         exit(1)
 
     # Load audio file as a floating point time series
@@ -87,18 +87,19 @@ if __name__ == '__main__':
     # S_log_Mel[1] = second feature (30x32) matrix
     # ...
     nb_features = int(frames.shape[1] / 32)
-    S_log_mel = np.empty((nb_features, 30, 32), dtype=np.float32, order='C')
+    S_log_mel = np.empty((nb_features, 30, 32), dtype=np.float32, order="C")
     for i in range(0, nb_features):
-        frame = frames[:, 0 + i:32 + i]
+        frame = frames[:, 0 + i : 32 + i]
         S_log_mel[i] = feature_extraction(frame)
 
     # Plot first feature/spectrogram
     plt.figure(figsize=(10, 4))
-    librosa.display.specshow(S_log_mel[0], sr=SR, y_axis='mel', fmax=8000,
-                             x_axis='time', cmap='viridis')
+    librosa.display.specshow(
+        S_log_mel[0], sr=SR, y_axis="mel", fmax=8000, x_axis="time", cmap="viridis"
+    )
     # plt.pcolormesh(S_log_Mel[0])
-    plt.colorbar(format='%+2.0f dB')
-    plt.title('Mel spectrogram')
+    plt.colorbar(format="%+2.0f dB")
+    plt.title("Mel spectrogram")
     plt.tight_layout()
 
     plt.show()

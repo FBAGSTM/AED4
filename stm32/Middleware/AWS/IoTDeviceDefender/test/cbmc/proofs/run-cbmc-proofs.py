@@ -57,7 +57,8 @@ finally run `litani run-build`.
 def get_project_name():
     cmd = [
         "make",
-        "-f", "Makefile.common",
+        "-f",
+        "Makefile.common",
         "echo-project-name",
     ]
     logging.debug(" ".join(cmd))
@@ -69,46 +70,56 @@ def get_project_name():
         logging.warning(
             "project name has not been set; using generic name instead. "
             "Set the PROJECT_NAME value in Makefile-project-defines to "
-            "remove this warning")
+            "remove this warning"
+        )
         return "<PROJECT NAME HERE>"
     return proc.stdout.strip()
 
 
 def get_args():
     pars = argparse.ArgumentParser(
-        description=DESCRIPTION, epilog=EPILOG,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    for arg in [{
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    for arg in [
+        {
             "flags": ["-j", "--parallel-jobs"],
             "type": int,
             "metavar": "N",
             "help": "run at most N proof jobs in parallel",
-    }, {
+        },
+        {
             "flags": ["--no-standalone"],
             "action": "store_true",
             "help": "only configure proofs: do not initialize nor run",
-    }, {
+        },
+        {
             "flags": ["-p", "--proofs"],
             "nargs": "+",
             "metavar": "DIR",
             "help": "only run proof in directory DIR (can pass more than one)",
-    }, {
+        },
+        {
             "flags": ["--project-name"],
             "metavar": "NAME",
             "default": get_project_name(),
             "help": "project name for report. Default: %(default)s",
-    }, {
+        },
+        {
             "flags": ["--proof-marker"],
             "metavar": "FILE",
             "default": "cbmc-proof.txt",
             "help": (
-                "name of file that marks proof directories. Default: "
-                "%(default)s"),
-    }, {
+                "name of file that marks proof directories. Default: " "%(default)s"
+            ),
+        },
+        {
             "flags": ["--verbose"],
             "action": "store_true",
             "help": "verbose output",
-    }]:
+        },
+    ]:
         flags = arg.pop("flags")
         pars.add_argument(*flags, **arg)
     return pars.parse_args()
@@ -119,8 +130,7 @@ def set_up_logging(verbose):
         level = logging.DEBUG
     else:
         level = logging.WARNING
-    logging.basicConfig(
-        format="run-cbmc-proofs: %(message)s", level=level)
+    logging.basicConfig(format="run-cbmc-proofs: %(message)s", level=level)
 
 
 def task_pool_size():
@@ -133,8 +143,10 @@ def task_pool_size():
 def print_counter(counter):
     print(
         "\rConfiguring CBMC proofs: "
-        "{complete:{width}} / {total:{width}}".format(
-            **counter), end="", file=sys.stderr)
+        "{complete:{width}} / {total:{width}}".format(**counter),
+        end="",
+        file=sys.stderr,
+    )
 
 
 def get_proof_dirs(proof_root, proof_list, proof_marker):
@@ -154,8 +166,8 @@ def get_proof_dirs(proof_root, proof_list, proof_marker):
 
     if proofs_remaining:
         logging.error(
-            "The following proofs were not found: %s",
-            ", ".join(proofs_remaining))
+            "The following proofs were not found: %s", ", ".join(proofs_remaining)
+        )
         sys.exit(1)
 
 
@@ -175,7 +187,8 @@ def get_litani_path(proof_root):
     cmd = [
         "make",
         "PROOF_ROOT=%s" % proof_root,
-        "-f", "Makefile.common",
+        "-f",
+        "Makefile.common",
         "litani-path",
     ]
     logging.debug(" ".join(cmd))
@@ -192,7 +205,8 @@ async def configure_proof_dirs(queue, counter):
         path = str(await queue.get())
 
         proc = await asyncio.create_subprocess_exec(
-            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path)
+            "nice", "-n", "15", "make", "-B", "--quiet", "_report", cwd=path
+        )
         await proc.wait()
         counter["fail" if proc.returncode else "pass"].append(path)
         counter["complete"] += 1
@@ -216,8 +230,7 @@ async def main():
             logging.error("Failed to run litani init")
             sys.exit(1)
 
-    proof_dirs = list(get_proof_dirs(
-        proof_root, args.proofs, args.proof_marker))
+    proof_dirs = list(get_proof_dirs(proof_root, args.proofs, args.proof_marker))
     if not proof_dirs:
         logging.error("No proof directories found")
         sys.exit(1)
@@ -231,13 +244,12 @@ async def main():
         "fail": [],
         "complete": 0,
         "total": len(proof_dirs),
-        "width": int(math.log10(len(proof_dirs))) + 1
+        "width": int(math.log10(len(proof_dirs))) + 1,
     }
 
     tasks = []
     for _ in range(task_pool_size()):
-        task = asyncio.create_task(configure_proof_dirs(
-            proof_queue, counter))
+        task = asyncio.create_task(configure_proof_dirs(proof_queue, counter))
         tasks.append(task)
 
     await proof_queue.join()
@@ -247,8 +259,9 @@ async def main():
 
     if counter["fail"]:
         logging.error(
-            "Failed to configure the following proofs:\n%s", "\n".join(
-                [str(f) for f in counter["fail"]]))
+            "Failed to configure the following proofs:\n%s",
+            "\n".join([str(f) for f in counter["fail"]]),
+        )
 
     if not args.no_standalone:
         run_build(litani, args.parallel_jobs)

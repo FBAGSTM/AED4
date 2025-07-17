@@ -6,10 +6,8 @@
 #
 
 
-
-
 # Filename - globaldefinesrsaformat.py
-# Description - This file contains global defines used in the RSA 
+# Description - This file contains global defines used in the RSA
 #               Format parser
 ####################################################################
 
@@ -18,7 +16,7 @@ PARAM_MOD = 1
 PARAM_PRIV_EXP = 2
 PARAM_EXP = 3
 
-# PEM header and footer 
+# PEM header and footer
 PEM_START = "-----BEGIN RSA PRIVATE KEY-----\n"
 PEM_END = "\n-----END RSA PRIVATE KEY-----\n"
 

@@ -1,4 +1,3 @@
-
 #
 # Copyright (c) 2001-2019, Arm Limited and Contributors. All rights reserved.
 #
@@ -20,7 +19,8 @@ import hashlib
 
 ########### Basic Utilities ###############################
 
-# This function calculates HASH SHA256 on binary data and return the HASH result 
+
+# This function calculates HASH SHA256 on binary data and return the HASH result
 def HASH_SHA256(BinData, OutputRep):
 
     # Calculate SHA 256 on given binary data
@@ -31,8 +31,10 @@ def HASH_SHA256(BinData, OutputRep):
         HashRes = HashObj.digest()
     else:
         HashRes = HashObj.hexdigest()
-    
+
     return HashRes
+
+
 # End of HASH_SHA256
 
 

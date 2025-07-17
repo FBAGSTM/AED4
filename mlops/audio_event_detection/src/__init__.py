@@ -7,15 +7,12 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 __all__ = [
-            "utils", 
-            "training",
-            "quantization", 
-            "preprocessing",
-            "prediction", 
-            "models",
-            "evaluation", 
-            "data_augmentation",
+    "utils",
+    "training",
+    "quantization",
+    "preprocessing",
+    "prediction",
+    "models",
+    "evaluation",
+    "data_augmentation",
 ]
-
-
-
