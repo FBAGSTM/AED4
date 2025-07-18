@@ -146,7 +146,7 @@ tools:
     optimization: balanced
     on_cloud: True
     path_to_stedgeai: C:/STMicroelectronics/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.0.0/Utilities/windows/stm32ai.exe
-  path_to_cubeIDE: C:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe
+  path_to_cubeIDE: C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/stm32cubeide.exe
 
 benchmarking:
   board: B-U585I-IOT02A 
@@ -161,7 +161,7 @@ deployment:
   unknown_class_threshold: 0.0
 
 mlflow:
-  uri: /opt/ml/model/mlruns
+  uri: ./src/outputs/mlruns
 
 hydra:
   run:
