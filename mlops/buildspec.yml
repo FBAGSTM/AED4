@@ -14,35 +14,19 @@ phases:
 
   pre_build:
     commands:
+      - set -e
       - echo "Retrieving ML Dataset configuration for use case $USECASE_NAME"
 
       - DATASET_NAME="FSD50K"
-      - DOWNLOAD_COMMAND="echo 'Downloading FSD50K Dataset...' && \
-        echo 'Downloading Dev Audio...' && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z01 -q && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z02 -q && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z03 -q && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z04 -q && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z05 -q && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.zip -q && \
-        zip -q -s 0 FSD50K.dev_audio.zip --out FSD50K.dev_audio-unsplit.zip && \
-        echo 'Downloading Eval Audio...' && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.eval_audio.z01 -q && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.eval_audio.zip -q && \
-        zip -q -s 0 FSD50K.eval_audio.zip --out FSD50K.eval_audio-unsplit.zip && \
-        echo 'Downloading Ground Truth...' && \
-        wget https://zenodo.org/records/4060432/files/FSD50K.ground_truth.zip -q && \
-        echo 'Unzipping...' && \
-        unzip -q FSD50K.ground_truth.zip -d temp/ && \
-        unzip -q FSD50K.eval_audio-unsplit.zip -d temp/ && \
-        unzip -q FSD50K.dev_audio-unsplit.zip -d temp/"
+      - DOWNLOAD_COMMAND="echo 'Downloading Dev Audio...' && wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z01 -q && wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z02 -q && wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z03 -q && wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z04 -q && wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.z05 -q && wget https://zenodo.org/records/4060432/files/FSD50K.dev_audio.zip -q && zip -q -s 0 FSD50K.dev_audio.zip --out FSD50K.dev_audio-unsplit.zip && echo 'Downloading Eval Audio...' && wget https://zenodo.org/records/4060432/files/FSD50K.eval_audio.z01 -q && wget https://zenodo.org/records/4060432/files/FSD50K.eval_audio.zip -q && zip -q -s 0 FSD50K.eval_audio.zip --out FSD50K.eval_audio-unsplit.zip && echo 'Downloading Ground Truth...' && wget https://zenodo.org/records/4060432/files/FSD50K.ground_truth.zip -q && echo 'Unzipping...' && unzip -q FSD50K.ground_truth.zip -d temp/ && unzip -q FSD50K.eval_audio-unsplit.zip -d temp/ && unzip -q FSD50K.dev_audio-unsplit.zip -d temp/"
 
-      - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/$DATASET_NAME || NOT_EXIST=true
+      - echo "Checking if the dataset exists in S3 Bucket - ${ARTIFACT_BUCKET}"
+      - aws s3api head-object --bucket ${ARTIFACT_BUCKET} --key train/datasets/$DATASET_NAME/FSD50K.ground_truth/dev.csv || NOT_EXIST=true
       - |
         if [ "$NOT_EXIST" = true ]; then
           mkdir -p temp
           echo "Downloading $DATASET_NAME Dataset..."
-          eval $DOWNLOAD_COMMAND
+          eval "$DOWNLOAD_COMMAND"
           echo "Uploading to S3 bucket under /train/datasets/$DATASET_NAME/ ..."
           aws s3 cp temp s3://${ARTIFACT_BUCKET}/train/datasets/$DATASET_NAME/ --recursive --quiet
         fi
