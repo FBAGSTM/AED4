@@ -16,8 +16,10 @@ dataset:
   name: fsd50k
   class_names: ['dog', 'chainsaw', 'crackling_fire', 'helicopter', 'rain', 'crying_baby', 'clock_tick', 'sneezing', 'rooster', 'sea_waves']
   file_extension: '.wav'
-  training_audio_path: /opt/ml/input/data/train/datasets/ESC-50/audio # Mandatory
-  training_csv_path: /opt/ml/input/data/train/datasets/ESC-50/meta/esc50.csv # Mandatory
+
+  # Training audio files path mounted inside the container at /opt/ml/input/data/train/
+  training_audio_path: /opt/ml/input/data/train/datasets/ESC-50/audio
+  training_csv_path: /opt/ml/input/data/train/datasets/ESC-50/meta/esc50.csv
 
   validation_audio_path: # Optional
   validation_csv_path: # Optional
@@ -43,10 +45,12 @@ dataset_specific:
   # Currently only supports fsd50k.
   # These parameters only need to be filled out IF the dataset name is set to 'fsd50K'
   fsd50k:
+    # Paths inside the container where dataset files are mounted
     csv_folder: /opt/ml/input/data/train/datasets/FSD50K/FSD50K.ground_truth
     dev_audio_folder: /opt/ml/input/data/train/datasets/FSD50K/FSD50K.dev_audio
     eval_audio_folder: /opt/ml/input/data/train/datasets/FSD50K/FSD50K.eval_audio
-    audioset_ontology_path: src/preprocessing/dataset_utils/fsd50k/audioset_ontology.json
+    # Path to ontology JSON file inside the code source directory mounted at /opt/ml/code (correpond to mlops folder in this project)
+    audioset_ontology_path: /opt/ml/code/audio_event_detection/src/preprocessing/dataset_utils/fsd50k/audioset_ontology.json
     only_keep_monolabel: True
 
 preprocessing:
@@ -152,6 +156,8 @@ benchmarking:
   board: B-U585I-IOT02A
 
 deployment:
+  # Path where source code for deployment is mounted inside processing jobs
+  # /opt/ml/processing/input/code/ corresponds to the source code folder mlops/ in SageMaker processing (evaluate + deployment) jobs
   c_project_path: /opt/ml/processing/input/code/audio_event_detection/stm32ai_application_code
   IDE: GCC
   verbosity: 1
@@ -161,8 +167,10 @@ deployment:
   unknown_class_threshold: 0.0
 
 mlflow:
+  # MLflow tracking URI inside the model container
   uri: /opt/ml/model/mlruns
 
 hydra:
+  # Directory where Hydra outputs are saved inside the model container
   run:
     dir: /opt/ml/model/outputs/${now:%Y_%m_%d_%H_%M_%S}

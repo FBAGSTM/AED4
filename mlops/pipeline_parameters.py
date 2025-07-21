@@ -16,10 +16,9 @@ def get_dataset_name(aed_mz_folder_name: str) -> str:
     """
     try:
         current_dir = os.getcwd()
-        aed_mz_dir = os.path.join(current_dir, "AED", aed_mz_folder_name)
-        user_training_config = os.path.join(
-            aed_mz_dir, "scripts", "training", "user_config.yaml"
-        )
+        modelzoo_path = os.path.join("pipelines", "stm", "stm32ai-modelzoo")
+        aed_mz_dir = os.path.join(current_dir, modelzoo_path, aed_mz_folder_name)
+        user_training_config = os.path.join(aed_mz_dir, "user_config.yaml")
         with open(user_training_config, "r", encoding="utf-8") as yaml_file:
             config = yaml.safe_load(yaml_file)
         return config.get("dataset", {}).get("name", "AED_Dataset")
