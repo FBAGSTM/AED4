@@ -244,7 +244,9 @@ You can remove these validation parameters entirely; however, doing so may resul
     | :-: | :-: | :-: | :-:
     | AED_MZ_FOLDER_NAME | audio_event_detection |	The folder name for the use case, used to locate the dataset and scripts	| No
     | processing_step_name| Preprocess_`dataset_name`	| The name of the preprocessing step in the pipeline in SageMaker Studio, dynamically includes the dataset name |	Yes
-    | modelzoo_version | v1 |	The version of the STM model zoo being used | No
+    | modelzoo_version | v3 |	The version of the STM model zoo being used | No
+    | train_operation_mode | chain_tqe | Specifies the training operation mode, defining the sequence or type of training steps executed in the pipeline. Typical values depend on the pipeline design (e.g., `"chain_tqe"` for chained training, quantization, evaluation) | Yes (but with 'training' or chain_ containing a 't')
+    | eval_path_method | swap | Method to modify dataset paths during evaluation. Possible values: <br>- `swap`: swap training and test paths with prefix replacement <br>- `stay`: keep training paths, set test paths to None | No
 
 > [!TIP]
 You can find an example of a completed pipeline_parameters-example.py file for the dataset ESC-50 in the [pipeline_parameters-example file](./pipeline_parameters-example.py).
