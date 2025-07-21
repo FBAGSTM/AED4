@@ -10,7 +10,6 @@ def get_pipeline_parameters(
     config = {
         "use_case_modelzoo_folder": AED_MZ_FOLDER_NAME,
         "processing_step_name": f"Preprocess_AED_Dataset",
-        "modelzoo_version": "v3",
         "train_operation_mode": "chain_tqe",
         "eval_path_method": "swap",
         "validation_parameters": [
