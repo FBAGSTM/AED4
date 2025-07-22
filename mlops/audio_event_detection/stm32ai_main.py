@@ -9,6 +9,7 @@
 import os
 import sys
 import json
+import re
 import numpy as np
 from hydra.core.hydra_config import HydraConfig
 import hydra
@@ -18,7 +19,7 @@ warnings.filterwarnings("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import tensorflow as tf
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 import mlflow
 import argparse
 import pathlib
@@ -935,6 +936,9 @@ def main(cfg: DictConfig) -> None:
         None
     """
 
+    print("[DEBUG] Configuration Hydra reçue :")
+    print(OmegaConf.to_yaml(cfg))
+
     # Configure the GPU (the 'general' section may be missing)
     if "general" in cfg and cfg.general:
         # Set upper limit on usable GPU memory
@@ -952,20 +956,18 @@ def main(cfg: DictConfig) -> None:
 
     # Handle fsd50k case
     dataset_cfg = cfg.get("dataset")
-    if not isinstance(dataset_cfg, dict):
+    if not (dataset_cfg and isinstance(dataset_cfg, DictConfig)):
         raise ValueError("[ERROR] 'dataset' section missing or invalid in config")
     dataset_name = dataset_cfg.get("name")
-    if not isinstance(dataset_cfg, str) and not dataset_name:
+    if not isinstance(dataset_name, str) or not dataset_name:
         raise ValueError("[ERROR] 'name' section missing or invalid in config")
-    if dataset_name == "fsd50k":
-        keys_to_clear = [
-            "training_audio_path",
-            "training_csv_path",
-            "test_audio_path",
-            "test_csv_path",
-        ]
-        for key in keys_to_clear:
-            dataset_cfg[key] = None
+
+    if dataset_name.lower().strip() == "fsd50k":
+        pattern = re.compile(r"_path$")
+        for key in dataset_cfg.keys():
+            key_clean = key.strip().lower()
+            if pattern.search(key_clean) and isinstance(dataset_cfg[key], str):
+                dataset_cfg[key] = None
         handle_fsd50k_config(cfg)
 
     # Parse the configuration file
