@@ -25,7 +25,7 @@ import pathlib
 import boto3
 from sagemaker.experiments.run import load_run
 from sagemaker.session import Session
-from typing import Optional
+from typing import List, Optional
 from clearml import Task
 from clearml.backend_config.defs import get_active_config_file
 
@@ -726,7 +726,6 @@ def process_mode(
         except Exception as e:
             raise Exception(f"Failed to write evaluation.json: {e}")
 
-
     elif mode == "deployment":
         deploy(cfg=configs)
         print("[INFO] : Deployment complete.")
@@ -856,6 +855,74 @@ def process_mode(
         task.connect(configs)
 
 
+def handle_fsd50k_config(cfg: DictConfig) -> None:
+    """
+    Validate and adjust fsd50k dataset-specific configuration paths
+    according to the operation mode.
+
+    Args:
+        cfg (DictConfig): Configuration dictionary.
+
+    Raises:
+        ValueError: If required keys are missing or invalid.
+    """
+    dataset_specific = cfg.get("dataset_specific")
+    if not isinstance(dataset_specific, dict):
+        raise ValueError(
+            f"[ERROR] Missing or invalid 'dataset_specific' key: {dataset_specific}"
+        )
+
+    fsd50k = dataset_specific.get("fsd50k")
+    if not isinstance(fsd50k, dict):
+        raise ValueError(f"[ERROR] Missing or invalid 'fsd50k' key: {fsd50k}")
+
+    keys_to_check: List[str] = [
+        "csv_folder",
+        "dev_audio_folder",
+        "eval_audio_folder",
+        "audioset_ontology_path",
+    ]
+
+    prefix_path_train = "/opt/ml/input/data/train/"
+    prefix_code_train = "/opt/ml/code"
+    entry_prefixes = [prefix_path_train, prefix_code_train]
+
+    operation_mode = getattr(cfg, "operation_mode", None)
+    if operation_mode is None:
+        raise ValueError(
+            "[ERROR] 'operation_mode' is not defined in the configuration."
+        )
+
+    for key in keys_to_check:
+        value = fsd50k.get(key)
+        if not (
+            isinstance(value, str) and any(value.startswith(p) for p in entry_prefixes)
+        ):
+            raise ValueError(
+                f"[ERROR] dataset_specific.fsd50k.{key} value '{value}' "
+                f"does not exist or does not start with any of the expected prefixes {entry_prefixes}. "
+                "Please check your pipeline configuration."
+            )
+
+        if operation_mode in {"evaluation", "chain_eqe", "benchmarking", "chain_eqeb"}:
+            if value.startswith(prefix_path_train):
+                value = value.replace(
+                    old=prefix_path_train, 
+                    new="/opt/ml/processing/input/",
+                    count=1,
+                )
+            elif value.startswith(prefix_code_train):
+                value = value.replace(
+                    old=prefix_code_train, 
+                    new="/opt/ml/processing/input/code/",
+                    count=1,
+                )
+            fsd50k[key] = value
+
+        elif operation_mode == "deployment":
+            fsd50k[key] = None
+
+
 @hydra.main(version_base=None, config_path="", config_name="user_config")
 def main(cfg: DictConfig) -> None:
     """
@@ -882,6 +949,11 @@ def main(cfg: DictConfig) -> None:
                 "Please consider setting the 'gpu_memory_limit' attribute "
                 "in the 'general' section of your configuration file."
             )
+
+    # Handle fsd50k case
+    dataset_name = cfg.get("name", "")
+    if dataset_name == "fsd50k":
+        handle_fsd50k_config(cfg)
 
     # Parse the configuration file
     cfg = get_config(cfg)

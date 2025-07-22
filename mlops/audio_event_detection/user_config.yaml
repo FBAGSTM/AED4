@@ -158,7 +158,7 @@ benchmarking:
 deployment:
   # Path where source code for deployment is mounted inside processing jobs
   # /opt/ml/processing/input/code/ corresponds to the source code folder mlops/ in SageMaker processing (evaluate + deployment) jobs
-  c_project_path: /opt/ml/processing/input/code/audio_event_detection/stm32ai_application_code
+  c_project_path: /opt/ml/code/audio_event_detection/stm32ai_application_code
   IDE: GCC
   verbosity: 1
   hardware_setup:
