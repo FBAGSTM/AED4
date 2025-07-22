@@ -951,8 +951,21 @@ def main(cfg: DictConfig) -> None:
             )
 
     # Handle fsd50k case
-    dataset_name = cfg.get("name", "")
+    dataset_cfg = cfg.get("dataset")
+    if not isinstance(dataset_cfg, dict):
+        raise ValueError("[ERROR] 'dataset' section missing or invalid in config")
+    dataset_name = dataset_cfg.get("name")
+    if not isinstance(dataset_cfg, str) and not dataset_name:
+        raise ValueError("[ERROR] 'name' section missing or invalid in config")
     if dataset_name == "fsd50k":
+        keys_to_clear = [
+            "training_audio_path",
+            "training_csv_path",
+            "test_audio_path",
+            "test_csv_path",
+        ]
+        for key in keys_to_clear:
+            dataset_cfg[key] = None
         handle_fsd50k_config(cfg)
 
     # Parse the configuration file
