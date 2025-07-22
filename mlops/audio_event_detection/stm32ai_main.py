@@ -868,13 +868,13 @@ def handle_fsd50k_config(cfg: DictConfig) -> None:
         ValueError: If required keys are missing or invalid.
     """
     dataset_specific = cfg.get("dataset_specific")
-    if not isinstance(dataset_specific, dict):
+    if not isinstance(dataset_specific, DictConfig):
         raise ValueError(
             f"[ERROR] Missing or invalid 'dataset_specific' key: {dataset_specific}"
         )
 
     fsd50k = dataset_specific.get("fsd50k")
-    if not isinstance(fsd50k, dict):
+    if not isinstance(fsd50k, DictConfig):
         raise ValueError(f"[ERROR] Missing or invalid 'fsd50k' key: {fsd50k}")
 
     keys_to_check: List[str] = [
@@ -893,6 +893,9 @@ def handle_fsd50k_config(cfg: DictConfig) -> None:
         raise ValueError(
             "[ERROR] 'operation_mode' is not defined in the configuration."
         )
+    print(
+        f"[INFO] Configuring fsd50k keys based on operation mode detected: '{operation_mode}'"
+    )
 
     for key in keys_to_check:
         value = fsd50k.get(key)
@@ -908,13 +911,13 @@ def handle_fsd50k_config(cfg: DictConfig) -> None:
         if operation_mode in {"evaluation", "chain_eqe", "benchmarking", "chain_eqeb"}:
             if value.startswith(prefix_path_train):
                 value = value.replace(
-                    old=prefix_path_train, 
+                    old=prefix_path_train,
                     new="/opt/ml/processing/input/",
                     count=1,
                 )
             elif value.startswith(prefix_code_train):
                 value = value.replace(
-                    old=prefix_code_train, 
+                    old=prefix_code_train,
                     new="/opt/ml/processing/input/code/",
                     count=1,
                 )
@@ -922,6 +925,7 @@ def handle_fsd50k_config(cfg: DictConfig) -> None:
 
         elif operation_mode == "deployment":
             fsd50k[key] = None
+    print("[INFO] Sucessfully done configuring 'fsd50k' yaml file.")
 
 
 @hydra.main(version_base=None, config_path="", config_name="user_config")
@@ -935,10 +939,6 @@ def main(cfg: DictConfig) -> None:
     Returns:
         None
     """
-
-    print("[DEBUG] Configuration Hydra reçue :")
-    print(OmegaConf.to_yaml(cfg))
-
     # Configure the GPU (the 'general' section may be missing)
     if "general" in cfg and cfg.general:
         # Set upper limit on usable GPU memory
@@ -963,6 +963,9 @@ def main(cfg: DictConfig) -> None:
         raise ValueError("[ERROR] 'name' section missing or invalid in config")
 
     if dataset_name.lower().strip() == "fsd50k":
+        print(
+            "[INFO] Dataset identified as 'fsd50k'. Performing special configuration ..."
+        )
         pattern = re.compile(r"_path$")
         for key in dataset_cfg.keys():
             key_clean = key.strip().lower()
@@ -971,6 +974,8 @@ def main(cfg: DictConfig) -> None:
         handle_fsd50k_config(cfg)
 
     # Parse the configuration file
+    print("[DEBUG] Configuration Hydra reçue :")
+    print(OmegaConf.to_yaml(cfg))
     cfg = get_config(cfg)
     cfg.output_dir = HydraConfig.get().run.dir
     mlflow_ini(cfg)
