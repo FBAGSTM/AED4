@@ -1,0 +1,77 @@
+# ESC-50 all class_names grouped by broad categories
+
+ESC-10:
+  - dog
+  - chainsaw
+  - crackling_fire
+  - helicopter
+  - rain
+  - crying_baby
+  - clock_tick
+  - sneezing
+  - rooster
+  - sea_waves
+
+Animals:
+  - cat
+  - chirping_birds
+  - cow
+  - crickets
+  - crow
+  - dog
+  - frog
+  - hen
+  - insects
+  - pig
+  - rooster
+  - sheep
+
+Events_Miscellaneous:
+  - fireworks
+
+Household_Domestic:
+  - can_opening
+  - chainsaw
+  - door_wood_creaks
+  - door_wood_knock
+  - glass_breaking
+  - hand_saw
+  - toilet_flush
+  - vacuum_cleaner
+  - washing_machine
+
+Human_Sounds:
+  - breathing
+  - brushing_teeth
+  - clapping
+  - coughing
+  - crying_baby
+  - drinking_sipping
+  - footsteps
+  - keyboard_typing
+  - laughing
+  - mouse_click
+  - sneezing
+  - snoring
+
+Musical_Bells:
+  - church_bells
+  - clock_alarm
+  - clock_tick
+
+Nature_Weather:
+  - crackling_fire
+  - pouring_water
+  - rain
+  - sea_waves
+  - thunderstorm
+  - water_drops
+  - wind
+
+Transportation_Machines:
+  - airplane
+  - car_horn
+  - engine
+  - helicopter
+  - siren
+  - train
