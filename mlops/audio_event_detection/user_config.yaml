@@ -12,14 +12,9 @@ operation_mode: "chain_tqe"
 #        'chain_tbqeb','chain_tqe','chain_eqe','chain_qb','chain_eqeb','chain_qd ']
 
 dataset:
-  name: fsd50k # esc-10
-  class_names: [
-      "Speech",
-      "Gunshot_and_gunfire",
-      "Crying_and_sobbing",
-      "Knock",
-      "Glass",
-    ] # ['dog', 'chainsaw', 'crackling_fire', 'helicopter', 'rain', 'crying_baby', 'clock_tick', 'sneezing', 'rooster', 'sea_waves']
+  name: esc-10 # fsd50k
+  class_names: ['dog', 'chainsaw', 'crackling_fire', 'helicopter', 'rain', 'crying_baby', 'clock_tick', 'sneezing', 'rooster', 'sea_waves']
+  # for fsd50k ["Speech", "Gunshot_and_gunfire", "Crying_and_sobbing", "Knock", "Glass"]
   file_extension: ".wav"
 
   # Training audio files path mounted inside the container at /opt/ml/input/data/train/
