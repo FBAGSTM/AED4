@@ -910,17 +910,9 @@ def handle_fsd50k_config(cfg: DictConfig) -> None:
 
         if operation_mode in {"evaluation", "chain_eqe", "benchmarking", "chain_eqeb"}:
             if value.startswith(prefix_path_train):
-                value = value.replace(
-                    old=prefix_path_train,
-                    new="/opt/ml/processing/input/",
-                    count=1,
-                )
+                value = value.replace(prefix_path_train, "/opt/ml/processing/input/", 1)
             elif value.startswith(prefix_code_train):
-                value = value.replace(
-                    old=prefix_code_train,
-                    new="/opt/ml/processing/input/code/",
-                    count=1,
-                )
+                value = value.replace(prefix_code_train, "/opt/ml/processing/input/code/", 1)
             fsd50k[key] = value
 
         elif operation_mode == "deployment":
