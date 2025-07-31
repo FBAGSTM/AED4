@@ -199,6 +199,7 @@ def _add_garbage_class_to_df(
     # classes_to_keep.
     def replacer(s):
         return "other" if s in other_classes else s
+
     kept_samples["category"] = kept_samples["category"].apply(replacer)
 
     if shuffle:

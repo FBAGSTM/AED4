@@ -218,10 +218,7 @@ def _evaluate_tflite_quantized_model(
             interpreter_quant.allocate_tensors()
         patches_processed = preprocess_input(patches, input_details)
         if "evaluation" in cfg and cfg.evaluation:
-            if (
-                "gen_npy_input" in cfg.evaluation
-                and cfg.evaluation.gen_npy_input
-            ):
+            if "gen_npy_input" in cfg.evaluation and cfg.evaluation.gen_npy_input:
                 patches_full.append(patches_processed)
         interpreter_quant.set_tensor(input_index_quant, patches_processed)
         interpreter_quant.invoke()

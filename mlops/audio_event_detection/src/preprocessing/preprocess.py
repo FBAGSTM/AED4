@@ -10,6 +10,7 @@
 from omegaconf import DictConfig
 import numpy as np
 import tensorflow as tf
+
 # from tensorflow.keras import layers # Don't think this one is needed
 from .data_loader import load_dataset
 

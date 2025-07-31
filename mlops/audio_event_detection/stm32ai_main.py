@@ -912,7 +912,9 @@ def handle_fsd50k_config(cfg: DictConfig) -> None:
             if value.startswith(prefix_path_train):
                 value = value.replace(prefix_path_train, "/opt/ml/processing/input/", 1)
             elif value.startswith(prefix_code_train):
-                value = value.replace(prefix_code_train, "/opt/ml/processing/input/code/", 1)
+                value = value.replace(
+                    prefix_code_train, "/opt/ml/processing/input/code/", 1
+                )
             fsd50k[key] = value
 
         elif operation_mode == "deployment":

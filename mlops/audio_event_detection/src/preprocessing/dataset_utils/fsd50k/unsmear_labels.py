@@ -272,6 +272,7 @@ def make_model_zoo_compatible(
 
         def intersecter(li):
             return list(set(preferred_collapse_classes).intersection(li))
+
         # Frankenstein monster of a code line
         df["labels"] = df["labels"].apply(splitter).apply(intersecter).apply(rng.choice)
 
@@ -288,6 +289,7 @@ def make_model_zoo_compatible(
 
     def appender(s):
         return s + ".wav"
+
     if quick_hack:
         df["filename"] = df["filename"].apply(appender)
 
