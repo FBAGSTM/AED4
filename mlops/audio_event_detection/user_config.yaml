@@ -1,3 +1,14 @@
+# =============================================================================
+# NOTE: This configuration file has been adapted for our GitHub-AWS (CodeBuild/SageMaker) architecture.
+# It differs from the original Model Zoo YAML in several ways, including:
+#   - Paths are set for containerized execution (e.g., /opt/ml/input/data/..., /opt/ml/code/..., ...) instead of local directories.
+#   - All sections for all operation mode  are included for AWS integration.
+#   - Some tool paths and parameters are modified to fit our CI/CD and cloud deployment workflows.
+# IMPORTANT: Do not modify these path prefixes unless you fully understand their purpose.
+# They are required for correct file mounting in AWS CodeBuild and SageMaker TensorFlow training workflows.
+# For more information on customizing these paths, please refer to the official AWS documentation.
+# =============================================================================
+
 general:
   project_name: aed_project
   model_path:
@@ -17,7 +28,6 @@ dataset:
   # for fsd50k ["Speech", "Gunshot_and_gunfire", "Crying_and_sobbing", "Knock", "Glass"]
   file_extension: ".wav"
 
-  # Training audio files path mounted inside the container at /opt/ml/input/data/train/
   training_audio_path: /opt/ml/input/data/train/datasets/ESC-50/audio
   training_csv_path: /opt/ml/input/data/train/datasets/ESC-50/meta/esc50.csv
 
@@ -45,11 +55,9 @@ dataset_specific:
   # Currently only supports fsd50k.
   # These parameters only need to be filled out IF the dataset name is set to 'fsd50K'
   fsd50k:
-    # Paths inside the container where dataset files are mounted
     csv_folder: /opt/ml/input/data/train/datasets/FSD50K/FSD50K.ground_truth
     dev_audio_folder: /opt/ml/input/data/train/datasets/FSD50K/FSD50K.dev_audio
     eval_audio_folder: /opt/ml/input/data/train/datasets/FSD50K/FSD50K.eval_audio
-    # Path to ontology JSON file inside the code source directory mounted at /opt/ml/code (correpond to mlops folder in this project)
     audioset_ontology_path: /opt/ml/code/audio_event_detection/src/preprocessing/dataset_utils/fsd50k/audioset_ontology.json
     only_keep_monolabel: True
 
@@ -149,17 +157,17 @@ tools:
   stedgeai:
     version: 10.0.0
     optimization: balanced
-    on_cloud: True
+    on_cloud: True # Keep this value to 'true' for ST Developer Cloud
     path_to_stedgeai: C:/STMicroelectronics/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.0.0/Utilities/windows/stm32ai.exe
   path_to_cubeIDE: C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/stm32cubeide.exe
+
+# NOTE: If 'on_cloud' is set to True, these two C:/ path are not used and does not need to be configured.
+# However, if it is missing from this YAML file, it may cause an error.
 
 benchmarking:
   board: B-U585I-IOT02A
 
 deployment:
-  # Path where source code for deployment is mounted inside processing jobs
-  # /opt/ml/code/ corresponds to the source code folder mlops/ in SageMaker training jobs
-  # /opt/ml/processing/input/code/ corresponds to the source code folder mlops/ in SageMaker processing (evaluate + deployment) jobs
   c_project_path: /opt/ml/code/audio_event_detection/stm32ai_application_code
   IDE: GCC
   verbosity: 1

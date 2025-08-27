@@ -11,11 +11,8 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 
-def get_model(
-    num_classes: int = None,
-    input_shape: Tuple[int, int, int] = None,
-    dropout: Optional[float] = None,
-) -> tf.keras.Model:
+def get_model(num_classes: int = None, input_shape: Tuple[int, int, int] = None,
+              dropout: Optional[float] = None) -> tf.keras.Model:
     """
     Creates a custom audio classification model with the given number of classes and input shape.
     Edit this function to define your custom model.
@@ -31,19 +28,17 @@ def get_model(
     inputs = tf.keras.Input(shape=input_shape)
 
     # Define the feature extraction layers
-    x = layers.Conv2D(16, (3, 3), strides=(1, 1), padding="same", use_bias=False)(
-        inputs
-    )
+    x = layers.Conv2D(16, (3, 3), strides=(1, 1), padding='same', use_bias=False)(inputs)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
+    x = layers.Activation('relu')(x)
     x = layers.MaxPooling2D()(x)
-    x = layers.Conv2D(32, (3, 3), strides=(1, 1), padding="same", use_bias=False)(x)
+    x = layers.Conv2D(32, (3, 3), strides=(1, 1), padding='same', use_bias=False)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
+    x = layers.Activation('relu')(x)
     x = layers.MaxPooling2D()(x)
-    x = layers.Conv2D(64, (3, 3), strides=(2, 2), padding="same", use_bias=False)(x)
+    x = layers.Conv2D(64, (3, 3), strides=(2, 2), padding='same', use_bias=False)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
+    x = layers.Activation('relu')(x)
     x = layers.MaxPooling2D()(x)
 
     # Define the classification layers

@@ -8,6 +8,7 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 import os
+import sys
 from pathlib import Path
 from omegaconf import DictConfig
 from tabulate import tabulate
@@ -15,14 +16,14 @@ import numpy as np
 import tensorflow as tf
 import onnxruntime
 import warnings
-
 warnings.filterwarnings("ignore")
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from common.utils import ai_runner_interp
 from common.evaluation import predict_onnx, model_is_quantized
-from src.preprocessing import preprocess_input, load_audio_sample
+from src.preprocessing import preprocess_input, load_audio_sample 
 from src.evaluation import aggregate_predictions
+
 
 
 def predict(cfg: DictConfig = None) -> None:
@@ -35,17 +36,17 @@ def predict(cfg: DictConfig = None) -> None:
 
     Returns:
         None
-
+    
     Errors:
         The directory containing the files cannot be found.
         The directory does not contain any file.
         No audio files can be loaded.
     """
-
+    
     model_path = cfg.general.model_path
     class_names = cfg.dataset.class_names
     test_files_dir = cfg.prediction.test_files_path
-
+    
     # Preproc and feature extraction parameters
     patch_length = cfg.feature_extraction.patch_length
     n_mels = cfg.feature_extraction.n_mels
@@ -82,12 +83,10 @@ def predict(cfg: DictConfig = None) -> None:
     print("  files directory:", test_files_dir)
     # Sort classes alphabetically
     class_names = sorted(class_names)
-    print(
-        "[INFO] : Class names sorted alphabetically. \n \
+    print("[INFO] : Class names sorted alphabetically. \n \
            If the model you are using has been trained using the model zoo, \n \
            there will be no issue. Otherwise, the predicted class' name might not correspond to the \n \
-           predicted one-hot vector."
-    )
+           predicted one-hot vector.")
     print(f"Class names : {class_names}")
     # Load the test images
     filenames = []
@@ -96,8 +95,7 @@ def predict(cfg: DictConfig = None) -> None:
     for i, fn in enumerate(os.listdir(test_files_dir)):
         filepath = os.path.join(test_files_dir, fn)
         # Skip subdirectories if any
-        if os.path.isdir(filepath):
-            continue
+        if os.path.isdir(filepath): continue
         filenames.append(fn)
         # Load the audio sample and split into patches
         patches = load_audio_sample(
@@ -125,23 +123,21 @@ def predict(cfg: DictConfig = None) -> None:
             power_to_db_ref=power_to_db_ref,
             norm=norm,
             htk=htk,
-            to_db=to_db,
-        )
-
+            to_db=to_db)
+    
         X.extend(patches)
         clip_labels.extend([i] * len(patches))
-
+    
     if not filenames:
-        raise ValueError(
-            "Unable to make predictions, could not find any audio file in the "
-            f"files directory.\nReceived directory path {test_files_dir}"
-        )
+        raise ValueError("Unable to make predictions, could not find any audio file in the "
+                         f"files directory.\nReceived directory path {test_files_dir}")
     # Concatenate X into a single array
     X = np.stack(X, axis=0)
     if expand_last_dim:
         X = np.expand_dims(X, axis=-1)
     # Convert clip labels into array this is critical
     clip_labels = np.array(clip_labels)
+
 
     results_table = []
     file_extension = Path(model_path).suffix
@@ -153,25 +149,19 @@ def predict(cfg: DictConfig = None) -> None:
         target = "host"
 
     if target in ["stedgeai_host", "stedgeai_n6"]:
-        if file_extension == ".h5" or (
-            file_extension == ".onnx" and not model_is_quantized(model_path)
-        ):
-            raise TypeError(
-                "Cannot run float models on targets stedgeai_host or stedgeai_n6"
-            )
-
-        interpreter = ai_runner_interp(target=target, name_model=model_name)
-
-        # Get ai runner input details and mangle it back into
+        if file_extension == ".h5" or (file_extension == ".onnx" and not model_is_quantized(model_path)):
+            raise TypeError("Cannot run float models on targets stedgeai_host or stedgeai_n6")
+        
+        interpreter = ai_runner_interp(target=target,
+                                       name_model=model_name)
+    
+        # Get ai runner input details and mangle it back into 
         # the tf input detail dict format to pass to preprocess_input
-
+    
         ai_runner_input_details = interpreter.get_inputs()
         input_details = {}
         input_details["dtype"] = ai_runner_input_details[0].dtype
-        input_details["quantization"] = [
-            ai_runner_input_details[0].scale,
-            ai_runner_input_details[0].zero_point,
-        ]
+        input_details["quantization"] = [ai_runner_input_details[0].scale, ai_runner_input_details[0].zero_point]
         X = preprocess_input(X, input_details)
 
         preds, _ = interpreter.invoke(X)
@@ -184,7 +174,7 @@ def predict(cfg: DictConfig = None) -> None:
     elif file_extension == ".h5":
         # Load the .h5 model
         model = tf.keras.models.load_model(model_path)
-
+        
         # Get results
         preds = model.predict(X)
 
@@ -202,8 +192,8 @@ def predict(cfg: DictConfig = None) -> None:
         interpreter_quant.set_tensor(input_index_quant, patches_processed)
         interpreter_quant.invoke()
         preds = interpreter_quant.get_tensor(output_index_quant)
-
-    elif file_extension == ".onnx":
+            
+    elif file_extension == '.onnx':
         # We assume ONNX models need (BCHW) or (BCL) format input
         # But X is in (BHWC) or (BLC) format
         # Note : since we switched to channels-last by default for AED ONNX, this should not be necessary
@@ -215,44 +205,30 @@ def predict(cfg: DictConfig = None) -> None:
         # else:
         #     raise ValueError(f"The input array must have either 3 or 4 dimensions but had {X.ndim} dimensions")
         # X = np.transpose(X, axes_order)
-
+        
         sess = onnxruntime.InferenceSession(model_path)
-        preds = predict_onnx(sess, X)
+        preds =  predict_onnx(sess, X)
 
     else:
-        raise TypeError(
-            f"Unknown or unsupported model type. Received path {model_path}"
-        )
+        raise TypeError(f"Unknown or unsupported model type. Received path {model_path}")
 
-    aggregated_probas = aggregate_predictions(
-        preds,
-        clip_labels=clip_labels,
-        multi_label=multi_label,
-        is_truth=False,
-        return_proba=True,
-    )
-    aggregated_preds = aggregate_predictions(
-        preds,
-        clip_labels=clip_labels,
-        multi_label=multi_label,
-        is_truth=False,
-        return_proba=False,
-    )
+    aggregated_probas = aggregate_predictions(preds,
+                                                clip_labels=clip_labels,
+                                                multi_label=multi_label,
+                                                is_truth=False,
+                                                return_proba=True)
+    aggregated_preds = aggregate_predictions(preds,
+                                                clip_labels=clip_labels,
+                                                multi_label=multi_label,
+                                                is_truth=False,
+                                                return_proba=False)
     # Add result to the table
     for i in range(aggregated_preds.shape[0]):
-        results_table.append(
-            [
-                class_names[np.argmax(aggregated_preds[i])],
-                aggregated_preds[i],
-                aggregated_probas[i].round(decimals=2),
-                filenames[i],
-            ]
-        )
+        results_table.append([class_names[np.argmax(aggregated_preds[i])],
+                                aggregated_preds[i],
+                                aggregated_probas[i].round(decimals=2),
+                                filenames[i]])
+
 
     # Display the results table
-    print(
-        tabulate(
-            results_table,
-            headers=["Prediction", "One-hot prediction", "Score", "Audio file"],
-        )
-    )
+    print(tabulate(results_table, headers=["Prediction", "One-hot prediction", "Score", "Audio file"]))

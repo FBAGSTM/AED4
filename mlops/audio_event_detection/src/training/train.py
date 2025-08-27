@@ -8,9 +8,10 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 import os
+import sys
 from timeit import default_timer as timer
 from datetime import timedelta
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pathlib import Path
 from hydra.core.hydra_config import HydraConfig
 from munch import DefaultMunch
@@ -19,19 +20,13 @@ import numpy as np
 import tensorflow as tf
 
 
-from common.utils import (
-    log_to_file,
-    log_last_epoch_history,
-    LRTensorBoard,
-    check_training_determinism,
-    model_summary,
-    collect_callback_args,
-    vis_training_curves,
-)
+from common.utils import log_to_file, log_last_epoch_history, LRTensorBoard, check_training_determinism, \
+                         model_summary, collect_callback_args, vis_training_curves
 from common.training import set_dropout_rate, get_optimizer, lr_schedulers
 from src.utils import get_model, get_loss, AED_CUSTOM_OBJECTS
 from src.data_augmentation import get_data_augmentation
 from src.evaluation import evaluate_h5_model
+
 
 
 def _load_model_to_train(cfg, model_path=None, num_classes=None) -> tf.keras.Model:
@@ -43,13 +38,13 @@ def _load_model_to_train(cfg, model_path=None, num_classes=None) -> tf.keras.Mod
 
     Arguments:
         cfg (DictConfig): a dictionary containing the configuration file.
-        model_path (str): a path to a .h5 file provided using the
+        model_path (str): a path to a .h5 file provided using the 
                           'general.model_path' attribute.
 
     Return:
         tf.keras.Model: a keras model.
     """
-
+    
     if cfg.training.model:
         # Model from the zoo
         model = get_model(
@@ -64,8 +59,7 @@ def _load_model_to_train(cfg, model_path=None, num_classes=None) -> tf.keras.Mod
             activity_regularizer=None,
             patch_length=cfg.feature_extraction.patch_length,
             n_mels=cfg.feature_extraction.n_mels,
-            section="training.model",
-        )
+            section="training.model")
         input_shape = cfg.training.model.input_shape
 
     elif model_path:
@@ -74,28 +68,22 @@ def _load_model_to_train(cfg, model_path=None, num_classes=None) -> tf.keras.Mod
         input_shape = tuple(model.input.shape[1:])
 
     elif cfg.training.resume_training_from:
-        # Model saved during a previous training
+        # Model saved during a previous training 
         model = tf.keras.models.load_model(
-            cfg.training.resume_training_from, custom_objects=AED_CUSTOM_OBJECTS
-        )
+                        cfg.training.resume_training_from,
+                        custom_objects=AED_CUSTOM_OBJECTS)
         input_shape = tuple(model.input.shape[1:])
 
     else:
-        raise RuntimeError(
-            "\nInternal error: should have model, model_path or resume_training_from"
-        )
+        raise RuntimeError("\nInternal error: should have model, model_path or resume_training_from")
 
     return model, input_shape
 
 
-def _get_callbacks(
-    callbacks_dict: DictConfig,
-    output_dir: str = None,
-    logs_dir: str = None,
-    saved_models_dir: str = None,
-) -> List[tf.keras.callbacks.Callback]:
+def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir: str = None,
+                  saved_models_dir: str = None) -> List[tf.keras.callbacks.Callback]:
     """
-    This function creates the list of Keras callbacks to be passed to
+    This function creates the list of Keras callbacks to be passed to 
     the fit() function including:
       - the Model Zoo built-in callbacks that can't be redefined by the
         user (ModelCheckpoint, TensorBoard, CSVLogger).
@@ -109,7 +97,7 @@ def _get_callbacks(
     an error is thrown with a message saying that the name and/or arguments
     of the callback are incorrect.
 
-    The user may use the ModelSaver callback to periodically save the model
+    The user may use the ModelSaver callback to periodically save the model 
     at the end of an epoch. If it is not used, a default ModelSaver is added
     that saves the model at the end of each epoch. The model file is named
     last_model.h5 and is saved in the output_dir/saved_models_dir directory
@@ -130,22 +118,18 @@ def _get_callbacks(
                                            to the fit() function.
     """
 
-    message = (
-        "\nPlease check the 'training.callbacks' section of your configuration file."
-    )
+    message = "\nPlease check the 'training.callbacks' section of your configuration file."
     lr_scheduler_names = lr_schedulers.get_scheduler_names()
     num_lr_schedulers = 0
 
     # Generate the callbacks used in the config file (there may be none)
     callback_list = []
     if callbacks_dict is not None:
-        if not isinstance(callbacks_dict, DefaultMunch):
+        if type(callbacks_dict) != DefaultMunch:
             raise ValueError(f"\nInvalid callbacks syntax{message}")
         for name in callbacks_dict.keys():
             if name in ("ModelCheckpoint", "TensorBoard", "CSVLogger"):
-                raise ValueError(
-                    f"\nThe `{name}` callback is built-in and can't be redefined.{message}"
-                )
+                raise ValueError(f"\nThe `{name}` callback is built-in and can't be redefined.{message}")
             if name in lr_scheduler_names:
                 text = f"lr_schedulers.{name}"
             else:
@@ -153,22 +137,15 @@ def _get_callbacks(
 
             # Add the arguments to the callback string
             # and evaluate it to get the callback object
-            text += collect_callback_args(
-                name, args=callbacks_dict[name], message=message
-            )
+            text += collect_callback_args(name, args=callbacks_dict[name], message=message)
             try:
                 callback = eval(text)
             except ValueError as error:
-                raise ValueError(
-                    f"\nThe callback name `{name}` is unknown, or its arguments are incomplete "
-                    f"or invalid\nReceived: {text}{message}"
-                ) from error
+                raise ValueError(f"\nThe callback name `{name}` is unknown, or its arguments are incomplete "
+                                 f"or invalid\nReceived: {text}{message}") from error
             callback_list.append(callback)
 
-            if name in lr_scheduler_names + [
-                "ReduceLROnPlateau",
-                "LearningRateScheduler",
-            ]:
+            if name in lr_scheduler_names + ["ReduceLROnPlateau", "LearningRateScheduler"]:
                 num_lr_schedulers += 1
 
     # Check that there is only one scheduler
@@ -177,46 +154,37 @@ def _get_callbacks(
 
     # Add the Keras callback that saves the best model obtained so far
     callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(output_dir, saved_models_dir, "best_augmented_model.h5"),
-        save_best_only=True,
-        save_weights_only=False,
-        monitor="val_accuracy",
-        mode="max",
-    )
+                        filepath=os.path.join(output_dir, saved_models_dir, "best_augmented_model.h5"),
+                        save_best_only=True,
+                        save_weights_only=False,
+                        monitor="val_accuracy",
+                        mode="max")
     callback_list.append(callback)
 
     # Add the Keras callback that saves the model at the end of the epoch
     callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(output_dir, saved_models_dir, "last_augmented_model.h5"),
-        save_best_only=False,
-        save_weights_only=False,
-        monitor="val_accuracy",
-        mode="max",
-    )
+                        filepath=os.path.join(output_dir, saved_models_dir, "last_augmented_model.h5"),
+                        save_best_only=False,
+                        save_weights_only=False,
+                        monitor="val_accuracy",
+                        mode="max")
     callback_list.append(callback)
 
     # Add the TensorBoard callback
     callback = LRTensorBoard(log_dir=os.path.join(output_dir, logs_dir))
     callback_list.append(callback)
 
-    # Add the CVSLogger callback (must be last in the list
+    # Add the CVSLogger callback (must be last in the list 
     # of callbacks to make sure it records the learning rate)
-    callback = tf.keras.callbacks.CSVLogger(
-        os.path.join(output_dir, logs_dir, "metrics", "train_metrics.csv")
-    )
+    callback = tf.keras.callbacks.CSVLogger(os.path.join(output_dir, logs_dir, "metrics", "train_metrics.csv"))
     callback_list.append(callback)
 
     return callback_list
 
 
-def train(
-    cfg: DictConfig = None,
-    train_ds: tf.data.Dataset = None,
-    valid_ds: tf.data.Dataset = None,
-    val_clip_labels: np.ndarray = None,
-    test_ds: Optional[tf.data.Dataset] = None,
-    test_clip_labels: np.ndarray = None,
-) -> str:
+def train(cfg: DictConfig = None, train_ds: tf.data.Dataset = None,
+          valid_ds: tf.data.Dataset = None, val_clip_labels: np.ndarray = None,
+          test_ds: Optional[tf.data.Dataset] = None, test_clip_labels: np.ndarray = None) -> str:
     """
     Trains the model with the given configuration and datasets.
 
@@ -237,9 +205,7 @@ def train(
     class_names = cfg.dataset.class_names
     num_classes = len(class_names)
 
-    model, _ = _load_model_to_train(
-        cfg, model_path=cfg.general.model_path, num_classes=num_classes
-    )
+    model, _ = _load_model_to_train(cfg, model_path=cfg.general.model_path, num_classes=num_classes)
 
     # Info messages about the model that was loaded
     if cfg.training.model:
@@ -247,35 +213,20 @@ def train(
         print(f"[INFO] : Using `{cfm.name}` model")
         log_to_file(cfg.output_dir, (f"Model name : {cfm.name}"))
         if cfm.pretrained_weights:
-            print(
-                f"[INFO] : Initialized model with '{cfm.pretrained_weights}' pretrained weights"
-            )
-            log_to_file(
-                cfg.output_dir, (f"Pretrained weights : {cfm.pretrained_weights}")
-            )
+            print(f"[INFO] : Initialized model with '{cfm.pretrained_weights}' pretrained weights")
+            log_to_file(cfg.output_dir,(f"Pretrained weights : {cfm.pretrained_weights}"))
         elif cfm.pretrained_model_path:
-            print(
-                f"[INFO] : Initialized model with weights from model file {cfm.pretrained_model_path}"
-            )
-            log_to_file(
-                cfg.output_dir,
-                (f"Weights from model file : {cfm.pretrained_model_path}"),
-            )
+            print(f"[INFO] : Initialized model with weights from model file {cfm.pretrained_model_path}")
+            log_to_file(cfg.output_dir, (f"Weights from model file : {cfm.pretrained_model_path}"))
         else:
-            print(
-                "[INFO] : No pretrained weights were loaded, training from randomly initialized weights."
-            )
+            print("[INFO] : No pretrained weights were loaded, training from randomly initialized weights.")
     elif cfg.training.resume_training_from:
-        print(
-            f"[INFO] : Resuming training from model file {cfg.training.resume_training_from}"
-        )
-        log_to_file(
-            cfg.output_dir, (f"Model file : {cfg.training.resume_training_from}")
-        )
+        print(f"[INFO] : Resuming training from model file {cfg.training.resume_training_from}")
+        log_to_file(cfg.output_dir, (f"Model file : {cfg.training.resume_training_from}"))
     elif cfg.general.model_path:
         print(f"[INFO] : Loaded model file {cfg.general.model_path}")
-        log_to_file(cfg.output_dir, (f"Model file : {cfg.general.model_path}"))
-    if cfg.dataset.name:
+        log_to_file(cfg.output_dir ,(f"Model file : {cfg.general.model_path}"))
+    if cfg.dataset.name: 
         log_to_file(output_dir, f"Dataset : {cfg.dataset.name}")
 
     # Set frozen layers
@@ -293,7 +244,7 @@ def train(
     # This block shouldn't get triggered if dropout=0
     if "dropout" in cfg.training and cfg.training.dropout:
         set_dropout_rate(model, dropout_rate=cfg.training.dropout)
-
+        
     # Display a summary of the model
     if cfg.training.resume_training_from:
         model_summary(model)
@@ -312,8 +263,7 @@ def train(
         if not os.path.isdir(dir_name):
             raise ValueError(
                 "\nUnable to find directory {}\nPlease check the 'training.trained_model_path' "
-                "attribute in your configuration file.".format(dir_name)
-            )
+                "attribute in your configuration file.".format(dir_name))
 
     # Initialize the augmented model that includes
     model_layers = []
@@ -321,70 +271,54 @@ def train(
     if not cfg.training.resume_training_from:
         # Append eventual data augmentation layers to the model
         if cfg.data_augmentation:
-            data_augmentation_layers = get_data_augmentation(
-                cfg=cfg.data_augmentation, db_scale=cfg.feature_extraction.to_db
-            )
+            data_augmentation_layers = get_data_augmentation(cfg=cfg.data_augmentation,
+                                                            db_scale=cfg.feature_extraction.to_db)
             model_layers.extend(data_augmentation_layers)
         # Add the actual model to the model
         model_layers.append(model)
 
         augmented_model = tf.keras.Sequential(model_layers, name="augmented_model")
 
-    else:  # If we're resuming training we don't need to reappend the data augmentation layers.
+    else: # If we're resuming training we don't need to reappend the data augmentation layers.
         augmented_model = model
 
-    # Compile the model with data augmentation layers added
-    augmented_model.compile(
-        loss=get_loss(multi_label=cfg.dataset.multi_label),
-        metrics=["accuracy"],
-        optimizer=get_optimizer(cfg=cfg.training.optimizer),
-    )
 
-    callbacks = _get_callbacks(
-        callbacks_dict=cfg.training.callbacks,
-        output_dir=output_dir,
-        saved_models_dir=saved_models_dir,
-        logs_dir=cfg.general.logs_dir,
-    )
+    # Compile the model with data augmentation layers added
+    augmented_model.compile(loss=get_loss(multi_label=cfg.dataset.multi_label),
+                            metrics=['accuracy'],
+                            optimizer=get_optimizer(cfg=cfg.training.optimizer))
+
+    callbacks = _get_callbacks(callbacks_dict=cfg.training.callbacks,
+                              output_dir=output_dir,
+                              saved_models_dir=saved_models_dir,
+                              logs_dir=cfg.general.logs_dir)
 
     # check if determinism can be enabled
     if cfg.general.deterministic_ops:
         sample_ds = train_ds.take(1)
         tf.config.experimental.enable_op_determinism()
         if not check_training_determinism(augmented_model, sample_ds):
-            print(
-                "[WARNING]: Some operations cannot be run deterministically. Setting deterministic_ops to False."
-            )
-            tf.config.experimental.enable_op_determinism.__globals__[
-                "_pywrap_determinism"
-            ].enable(False)
+            print("[WARNING]: Some operations cannot be run deterministically. Setting deterministic_ops to False.")
+            tf.config.experimental.enable_op_determinism.__globals__["_pywrap_determinism"].enable(False)
 
     # Train the model
     print("Starting training...")
     start_time = timer()
     try:
-        history = augmented_model.fit(
-            train_ds,
-            validation_data=valid_ds,
-            epochs=cfg.training.epochs,
-            callbacks=callbacks,
-        )
-    except Exception as e:
-        print("\n[INFO] : Training interrupted")
-        print(f"Exception raised : {e}")
-    # save the last epoch history in the log file
-    last_epoch = log_last_epoch_history(cfg, output_dir)
+        history = augmented_model.fit(train_ds,
+                                      validation_data=valid_ds,
+                                      epochs=cfg.training.epochs,
+                                      callbacks=callbacks)
+    except Exception as e: 
+        print('\n[INFO] : Training interrupted')
+        print(f'Exception raised : {e}')  
+    #save the last epoch history in the log file
+    last_epoch=log_last_epoch_history(cfg, output_dir)
     end_time = timer()
     fit_run_time = int(end_time - start_time)
-    average_time_per_epoch = round(fit_run_time / (int(last_epoch) + 1), 2)
+    average_time_per_epoch = round(fit_run_time / (int(last_epoch) + 1),2)
     print("Training runtime: " + str(timedelta(seconds=fit_run_time)))
-    log_to_file(
-        output_dir,
-        (
-            f"Training runtime : {fit_run_time} s\n"
-            + f"Average time per epoch : {average_time_per_epoch} s"
-        ),
-    )
+    log_to_file(output_dir, (f"Training runtime : {fit_run_time} s\n" + f"Average time per epoch : {average_time_per_epoch} s"))          
 
     # Visualize training curves
     vis_training_curves(history=history, output_dir=output_dir)
@@ -394,16 +328,15 @@ def train(
     checkpoint_filepath = Path(models_dir) / "best_augmented_model.h5"
 
     checkpoint_model = tf.keras.models.load_model(
-        checkpoint_filepath, custom_objects=AED_CUSTOM_OBJECTS
-    )
+        checkpoint_filepath,
+        custom_objects=AED_CUSTOM_OBJECTS)
 
     # Get the checkpoint model w/o preprocessing layers
     print("[DEBUG] Summary of checkpoint model")
     model_summary(checkpoint_model)
     best_model = checkpoint_model.layers[-1]
-    best_model.compile(
-        loss=get_loss(multi_label=cfg.dataset.multi_label), metrics=["accuracy"]
-    )
+    best_model.compile(loss=get_loss(multi_label=cfg.dataset.multi_label),
+                       metrics=['accuracy'])
     best_model_path = Path(output_dir) / saved_models_dir / "best_model.h5"
     best_model.save(best_model_path)
     print("[DEBUG] Summary of best model")
@@ -413,33 +346,26 @@ def train(
 
     if cfg.training.trained_model_path:
         best_model.save(cfg.training.trained_model_path)
-        print(
-            "[INFO] : Saved trained model in file {}".format(
-                cfg.training.trained_model_path
-            )
-        )
+        print("[INFO] : Saved trained model in file {}".format(cfg.training.trained_model_path))
+
 
     # Evaluate h5 best model on the validation set
-    _, _ = evaluate_h5_model(
-        model_path=best_model_path,
-        eval_ds=valid_ds,
-        class_names=class_names,
-        clip_labels=val_clip_labels,
-        output_dir=output_dir,
-        name_ds="validation_set",
-        multi_label=cfg.dataset.multi_label,
-    )
+    _, _ = evaluate_h5_model(model_path=best_model_path,
+                             eval_ds=valid_ds,
+                             class_names=class_names,
+                             clip_labels=val_clip_labels,
+                             output_dir=output_dir,
+                             name_ds="validation_set",
+                             multi_label=cfg.dataset.multi_label)
 
     if test_ds:
         # Evaluate h5 best model on the test set
-        _, _ = evaluate_h5_model(
-            model_path=best_model_path,
-            eval_ds=test_ds,
-            class_names=class_names,
-            clip_labels=test_clip_labels,
-            output_dir=output_dir,
-            name_ds="test_set",
-            multi_label=cfg.dataset.multi_label,
-        )
+        _, _ = evaluate_h5_model(model_path=best_model_path,
+                                 eval_ds=test_ds,
+                                 class_names=class_names,
+                                 clip_labels=test_clip_labels,
+                                 output_dir=output_dir,
+                                 name_ds="test_set",
+                                 multi_label=cfg.dataset.multi_label)
 
     return best_model_path
