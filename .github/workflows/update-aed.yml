@@ -14,8 +14,8 @@ jobs:
     concurrency:
       group: reusable-workflow-${{ github.ref }}
       cancel-in-progress: true
-    uses: TBALSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
+    uses: FBAGSTM/STM32_AWS_CDK/.github/workflows/update-submodule.yml@main
     with:
-      submodule_name: AED
+      submodule_name: AED4
     secrets:
       personal_access_token: ${{ secrets.GA_TOKEN }}
